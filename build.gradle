@@ -17,7 +17,8 @@ repositories {
 ext {
     dependencyVersions = [
         commons: [
-            apacheLang3: '3.5'
+            apacheLang3: '3.5',
+            ini4j: '0.5.+'
         ],
         net: [
             netty: '4.1.11.Final',
@@ -35,8 +36,10 @@ ext {
 
 dependencies {
     compileOnly group: 'org.projectlombok', name: 'lombok', version: dependencyVersions.gen.lombok
+    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: dependencyVersions.gen.lombok
 
     compile group: 'org.apache.commons', name: 'commons-lang3', version: dependencyVersions.commons.apacheLang3
+    compile group: 'org.ini4j', name: 'ini4j', version: dependencyVersions.commons.ini4j
     compile group: 'io.netty', name: 'netty-all', version: dependencyVersions.net.netty
     compile group: 'com.google.protobuf', name: 'protobuf-java', version: dependencyVersions.net.protobuff
 
