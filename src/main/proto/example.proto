@@ -1,0 +1,8 @@
+syntax = "proto3";
+package de.tum.p2p.onion.forwarding.proto;
+
+option java_outer_classname = "Protocol";
+
+message Example {
+    string foo = 1;
+}

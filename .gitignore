@@ -49,6 +49,7 @@ $RECYCLE.BIN/
 gradle-app.setting
 !gradle-wrapper.jar
 .gradletasknamecache
+src/generated
 
 # Floo
 .floo

@@ -1,7 +1,10 @@
+plugins {
+    id "java"
+    id "com.google.protobuf" version "0.8.1"
+}
+
 group 'de.tum.p2p'
 version '0.1-SNAPSHOT'
-
-apply plugin: 'java'
 
 sourceCompatibility = 1.8
 
@@ -17,7 +20,9 @@ ext {
             apacheLang3: '3.5'
         ],
         net: [
-            netty: '4.1.11.Final'
+            netty: '4.1.11.Final',
+            protobuff: '3.3.1',
+            protobuffCompiler: '3.3.0'
         ],
         gen: [
             lombok: '1.16.+'
@@ -33,10 +38,29 @@ dependencies {
 
     compile group: 'org.apache.commons', name: 'commons-lang3', version: dependencyVersions.commons.apacheLang3
     compile group: 'io.netty', name: 'netty-all', version: dependencyVersions.net.netty
+    compile group: 'com.google.protobuf', name: 'protobuf-java', version: dependencyVersions.net.protobuff
+
 
     testCompile group: 'junit', name: 'junit', version: dependencyVersions.test.junit
 }
 
+protobuf {
+    generatedFilesBaseDir = "$projectDir/src/generated"
+
+    protoc {
+        artifact = "com.google.protobuf:protoc:${dependencyVersions.net.protobuffCompiler}"
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/main/java", "${protobuf.generatedFilesBaseDir}/main/java"]
+        }
+    }
+}
+
 clean {
     delete fileTree('.') { include '**/*.log' }
+    delete protobuf.generatedFilesBaseDir
 }
