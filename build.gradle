@@ -1,0 +1,42 @@
+group 'de.tum.p2p'
+version '0.1-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+ext {
+    dependencyVersions = [
+        commons: [
+            apacheLang3: '3.5'
+        ],
+        net: [
+            netty: '4.1.11.Final'
+        ],
+        gen: [
+            lombok: '1.16.+'
+        ],
+        test: [
+            junit: '4.12'
+        ]
+    ]
+}
+
+dependencies {
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: dependencyVersions.gen.lombok
+
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: dependencyVersions.commons.apacheLang3
+    compile group: 'io.netty', name: 'netty-all', version: dependencyVersions.net.netty
+
+    testCompile group: 'junit', name: 'junit', version: dependencyVersions.test.junit
+}
+
+clean {
+    delete fileTree('.') { include '**/*.log' }
+}

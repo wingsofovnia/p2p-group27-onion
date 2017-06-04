@@ -1,6 +1,6 @@
 # Onion Forwarding Module
 
-The Onion module deals with constructing onion tunnels for tunnelling data streams from CM/UI module.
+The Onion Forwarding module is concerned with handling the API connections and P2P connections. It forwards data between API connections and onion tunnels.
 
 ## Authors
 
