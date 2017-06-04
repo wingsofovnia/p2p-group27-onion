@@ -1,0 +1,83 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{indentfirst}
+\setlength{\parskip}{0.4em}
+
+\title{Peer-to-Peer Systems and Security \\
+        \large{IN2194, SoSe 17} \\
+        \huge{Onion Forwarding module} \\
+        \small{for Anonymous and Unobservable VoIP Application} \\
+        \bigbreak
+        \large{\textbf{Initial Approach Report}}}
+\author{Team \#27}
+\date{May 2017}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Team}
+The team \#27, which is responsible for the \textbf{Onion Forwarding} module, concerned with handling the API connections, P2P connections and data forwarding between API connections \& onion tunnels, consists of 2 students:
+
+\begin{itemize}
+\item \textbf{Eiler Poulsen} (03692108), Informatics (M.Sc.);
+\item \textbf{Illia Ovchynnikov} (03692268), Informatics (M.Sc.).
+\end{itemize}
+
+\section{Programming Language and Target Platforms}
+The software solution will be developed in Java. The arguments in favor are mostly due to team's familiarly with the language and its stack. There is also a vast array of libraries available and a lot of supportive documentation on how to design and develop network applications on this stack.
+
+Generally speaking, the software solution will most likely run on all platforms that can run Oracle JRE (Java Runtime Environment) version 1.8, however, Windows 10 and MacOS Sierra are the only supported platforms targeted as they are our development environment of choice.
+
+\section{Build System}
+This project will use Gradle for build and dependency management. Its an automation pipeline for building, fetching dependencies, as well as testing projects. Its core strength lies in how it can be customized for specific needs, especially in terms of integration with Software Quality related tools.
+
+To not burden users with build system required software the Gradle Wrapper will be used for starting a Gradle build. It will download the required Gradle distribution and use it to execute the build.
+
+\section{Software Quality}
+
+There are several strategies that will be employed to keep the quality of code as high as possible.
+
+\begin{itemize}
+
+\item \textbf{Code reviews} via pull requests will enforce the code style consistency, produce higher quality code and improved security. This is encouraged by having team members double checking each others' code, looking for potential issues and suggest solutions. Merges will be allowed only if the build succeeds and all team's comments are resolved.
+
+\item \textbf{Continuous integration} will help to detect errors quickly, and locate them more easily. This includes frequent \& regular code integration to a single shared repository and continuous building via GitLab's CI services.
+
+\item To organize continuous integration of code workflow, the \textbf{GitHub flow} will be used.
+
+\item Would like to encourage a degree of \textbf{test driven development}. Since 100\% coverage will hamper development time significantly only the most critical part of the code should be tested.
+
+\item Plan on using \textbf{stylecheck} to pre-emptively enforce code style consistency according to industry best practices.
+
+\item Looking into using tools such as \textbf{pmdcheck} to statically analyze the code for potential issues such as quality and security vulnerabilities.
+
+\item Generally look to use well-proven high-performing libraries for handling network tasks.
+
+\end{itemize}
+
+\section{Third-party Dependencies}
+There are a couple of libraries available this project may rely on:
+
+\begin{itemize}
+\item \textbf{Google ProtoBuff} for handling protocol's payloads;
+\item \textbf{Java Security API} for encryption-related matters;
+\item \textbf{Netty} as a network application framework for rapid development of maintainable high performance protocol servers \& clients.
+\end{itemize}
+
+\section{Licence}
+The project will be distributed under the MIT license, since the purpose of this project is purely academical therefore the team decided to keep the project open source with the only requirement to keep the team's copyright notice intact when its recipients repurpose, redistribute, or otherwise reuse the code and the MIT license fulfills this requirement entirely.
+
+\section{Team Experience}
+The previous experience of the team which may be relevant to the project has purely academical nature:
+
+\begin{itemize}
+\item \textbf{Eiler Poulsen} worked on a client/server version of the well-known tabletop game Battleship in Java;
+\item \textbf{Illia Ovchynnikov} was engaged in a team project where client/server service for chatting using vanilla Java sockets was developed.
+\end{itemize}
+
+\section{Workload Distribution}
+The team will follow a flat organization structure, therefore, there will be no strict responsibility separation and the project will be done in a tight cooperation between the team members. A uniform workload distribution will be considered as an ideal workload distribution the team is going to approximate to. This is achieved once the project specification is analyzed in more detail and specified in the form of tasks. These tasks will then be equally divided among the team members depending on a familiarity with a task or personal preferences.
+
+\end{document}
