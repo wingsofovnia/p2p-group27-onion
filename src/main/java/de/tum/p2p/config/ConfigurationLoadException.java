@@ -1,5 +1,9 @@
-package de.tum.p2p.onion.forwarding.config;
+package de.tum.p2p.config;
 
+/**
+ * Thrown by {@link Configurations} in case of unexpected errors
+ * during configurations loading
+ */
 public class ConfigurationLoadException extends RuntimeException {
 
     public ConfigurationLoadException(String message) {

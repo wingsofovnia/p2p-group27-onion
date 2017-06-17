@@ -1,6 +1,6 @@
-package de.tum.p2p.onion.forwarding.proto.message;
+package de.tum.p2p.proto.message;
 
-import de.tum.p2p.onion.forwarding.proto.ProtoException;
+import de.tum.p2p.proto.ProtoException;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;

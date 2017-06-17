@@ -1,4 +1,4 @@
-package de.tum.p2p.onion.forwarding.config;
+package de.tum.p2p.config;
 
 import lombok.val;
 import org.ini4j.Wini;
@@ -39,7 +39,7 @@ public class Configurations {
     private final Wini appConfig;
 
     private Configurations() {
-        throw new AssertionError("No de.tum.p2p.onion.forwarding.config.Configurations instance for you");
+        throw new AssertionError("No de.tum.p2p.config.Configurations instance for you");
     }
 
     private Configurations(InputStream configFileStream) {

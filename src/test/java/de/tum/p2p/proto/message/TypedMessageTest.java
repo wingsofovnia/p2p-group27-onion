@@ -1,4 +1,4 @@
-package de.tum.p2p.onion.forwarding.proto.message;
+package de.tum.p2p.proto.message;
 
 import lombok.val;
 import org.junit.Test;
@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static de.tum.p2p.onion.forwarding.proto.message.TypedMessage.guessType;
+import static de.tum.p2p.proto.message.TypedMessage.guessType;
 import static java.util.Arrays.stream;
 import static org.junit.Assert.assertEquals;
 

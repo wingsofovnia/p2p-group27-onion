@@ -1,4 +1,4 @@
-package de.tum.p2p.onion.forwarding.proto.message;
+package de.tum.p2p.proto.message;
 
 import lombok.val;
 

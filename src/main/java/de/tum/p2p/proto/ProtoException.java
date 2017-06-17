@@ -1,4 +1,4 @@
-package de.tum.p2p.onion.forwarding.proto;
+package de.tum.p2p.proto;
 
 public class ProtoException extends RuntimeException {
 

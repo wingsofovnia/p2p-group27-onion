@@ -1,4 +1,4 @@
-package de.tum.p2p.onion.forwarding.config;
+package de.tum.p2p.config;
 
 import lombok.val;
 import org.junit.Test;
