@@ -22,6 +22,9 @@ ext {
         gen: [
             lombok: '1.16.+'
         ],
+        log: [
+            log4j: '1.7.+'
+        ],
         test: [
             junit: '4.12',
             mockito: '1.10.+'
@@ -36,6 +39,9 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: dependencyVersions.commons.apacheLang3
     compile group: 'org.ini4j', name: 'ini4j', version: dependencyVersions.commons.ini4j
     compile group: 'io.netty', name: 'netty-all', version: dependencyVersions.net.netty
+
+    compile group: 'org.slf4j', name: 'slf4j-api', version: dependencyVersions.log.log4j
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: dependencyVersions.log.log4j
 
     testCompile group: 'junit', name: 'junit', version: dependencyVersions.test.junit
     testCompile group: 'org.mockito', name: 'mockito-all', version: dependencyVersions.test.mockito

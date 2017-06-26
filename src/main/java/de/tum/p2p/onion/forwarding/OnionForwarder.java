@@ -3,11 +3,13 @@ package de.tum.p2p.onion.forwarding;
 import de.tum.p2p.Peer;
 import de.tum.p2p.proto.message.Message;
 
+import java.io.Closeable;
+
 /**
  * The Onion Forwarder is responsible for forwarding data between
  * API connections and Onion Tunnels.
  */
-public interface OnionForwarder {
+public interface OnionForwarder extends Closeable {
 
     /**
      * Drills a data tunnel that will be used for data propagation through peers
@@ -42,8 +44,8 @@ public interface OnionForwarder {
     /**
      * Forwards data through the data Tunnel given
      *
-     * @param tunnel a data Tunnel to be used as a data pipe
-     * @param message  a msg that should be forwarded
+     * @param tunnel  a data Tunnel to be used as a data pipe
+     * @param message a msg that should be forwarded
      * @throws OnionDataForwardingException in case of unexpected error during data forwarding
      */
     void forward(Tunnel tunnel, Message message) throws OnionDataForwardingException;
