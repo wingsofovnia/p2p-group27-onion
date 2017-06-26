@@ -15,5 +15,5 @@ This report document team's implementation approach to allocated module. It cont
 ### 2. Interim Report
 This report explains the design adopted for our Onion module and your reasons for doing so.
  - **Report (LaTeX)**: [interim/main.tex](interim/main.tex)
- - **Report (PDF)**: [Google Drive (ext)](https://drive.google.com/open?id=0B54N87Pu1jNTWnJXcEFCekNSTXc)
+ - **Report (PDF)**: [Google Drive (ext)](https://drive.google.com/open?id=0B54N87Pu1jNTMnZFTTlsNlRZWms)
  - **Deadline**: Tue 20. Jun 23:59 (Interim Report Milestone)

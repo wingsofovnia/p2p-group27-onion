@@ -12,7 +12,7 @@ sorting=ynt
 \addbibresource{bibliography.bib}
 
 \setlength{\parskip}{0.4em}
-        
+
 \title{Peer-to-Peer Systems and Security \\
         \large{IN2194, SoSe 17} \\
         \huge{Onion Forwarding module} \\
@@ -29,7 +29,7 @@ sorting=ynt
 \maketitle
 
 \section{Application Architecture}
-We are looking into creating a multi-threaded architecture, in which incoming requests are intercepted by a single thread (the Selector), queued, and subsequently processed asynchronously by threads (Thread Handlers) from a thread pool. To achieved this goal, we take advantage of the Netty framework\cite{netty}. 
+We are looking into creating a multi-threaded architecture, in which incoming requests are intercepted by a single thread (the Selector), queued, and subsequently processed asynchronously by threads (Thread Handlers) from a thread pool. To achieved this goal, we take advantage of the Netty framework\cite{netty}.
 
 One of its main benefits is the concept of pipelines for events; in which a task can be sequentially processed in multiple steps. This is a powerful concept considering the application in question and the data being transported; layered packaged data that must be and processed in multiple steps. Netty also provides us with length prefix framing which is important from a security point of view. The end result is a more secure, non-blocking, high performant, and scalable solution by design.
 
@@ -68,7 +68,7 @@ An origin onion \textit{O} constructs tunnels incrementally, negotiating a symme
 
 Once the tunnel has been established, \textit{O} and \textit{H\textsubscript{1}} can communicate securely with the negotiated key \textit{K\textsubscript{1}}.
 
-To extend the tunnel further, \textit{O} sends a TUNNEL EXTEND to \textit{H\textsubscript{1}}, specifying the address of the next onion \textit{H\textsubscript{2}} along with the first half of the Diffie-Hellman handshake for \textit{H\textsubscript{2}}. \textit{H\textsubscript{1}} copies the half-handshake into a TUNNEL CREATE message, and passes it to \textit{H\textsubscript{2}} to extend the tunnel. 
+To extend the tunnel further, \textit{O} sends a TUNNEL EXTEND to \textit{H\textsubscript{1}}, specifying the address of the next onion \textit{H\textsubscript{2}} along with the first half of the Diffie-Hellman handshake for \textit{H\textsubscript{2}}. \textit{H\textsubscript{1}} copies the half-handshake into a TUNNEL CREATE message, and passes it to \textit{H\textsubscript{2}} to extend the tunnel.
 
 \begin{figure}[H]
 \centering
@@ -76,7 +76,7 @@ To extend the tunnel further, \textit{O} sends a TUNNEL EXTEND to \textit{H\text
       \caption{Protocol data unit that represents an intention to extend the tunnel}
 \end{figure}
 
-When \textit{H\textsubscript{2}} responds with a TUNNEL CREATED, \textit{H\textsubscript{1}} wraps the payload into a TUNNEL EXTENDED message and passes it back to \textit{O}. Now the tunnel is extended to \textit{H\textsubscript{2}}, and \textit{O} and \textit{H\textsubscript{2}} share a common session key \textit{K\textsubscript{2}}. 
+When \textit{H\textsubscript{2}} responds with a TUNNEL CREATED, \textit{H\textsubscript{1}} wraps the payload into a TUNNEL EXTENDED message and passes it back to \textit{O}. Now the tunnel is extended to \textit{H\textsubscript{2}}, and \textit{O} and \textit{H\textsubscript{2}} share a common session key \textit{K\textsubscript{2}}.
 \begin{figure}[H]
 \centering
      \includegraphics[width=0.75\textwidth]{msg_tunnel_extended.pdf}
@@ -85,16 +85,8 @@ When \textit{H\textsubscript{2}} responds with a TUNNEL CREATED, \textit{H\texts
 
 To extend the tunnel to a third node or beyond, \textit{O} proceeds as above, always telling the last node in the tunnel to extend one hop further.
 
-TUNNEL ERROR message used to indicate different errors that arise during onion communication. It contains specific error code and may contain tunnel identifier and an address of a peer, that caused this error. 
-
-\begin{figure}[H]
-\centering
-     \includegraphics[width=0.75\textwidth]{msg_tunnel_error.pdf}
-      \caption{Protocol data unit used to notify onions about communication error of different types}
-\end{figure}
-
 Once \textit{O} has established the tunnel it can relay data in TUNNEL DATA messages. To enable confidentiality, integrity, and authenticity (Authenticated Encryption) message contains message authentication code generated using Encrypt-then-MAC scheme.
- 
+
 \begin{figure}[H]
 \centering
      \includegraphics[width=0.75\textwidth]{msg_tunnel_data.pdf}
@@ -113,18 +105,18 @@ To tear down a tunnel, \textit{O} sends a TUNNEL DESTROY message. Each \textit{H
       \caption{Protocol data unit used to notify about tunnel invalidation}
 \end{figure}
 
-A TUNNEL ERROR message is sent in case of errors occurred during the construction of a tunnel (e.g. peers going down, connection breaks) or sending a message (e.g. corrupted data)
+TUNNEL ERROR message used to indicate different errors that arise during onion communication. It contains specific error code and may contain tunnel identifier and an address of a peer, that caused this error.
 
 \begin{figure}[H]
 \centering
      \includegraphics[width=0.75\textwidth]{msg_tunnel_error.pdf}
-      \caption{Protocol data unit that represents tunneling error}
+      \caption{Protocol data unit used to notify onions about communication error of different types}
 \end{figure}
 
 It's a responsibility of a peer which founds and error to notify peers about error with appropriate ERROR CODE and peer cause address. Errors are propagated back to the tunnel originator \textit{O} that may decided to tear down a tunnel then.
 
 \medskip
- 
+
 \nocite{torproject}
 \nocite{netty}
 
