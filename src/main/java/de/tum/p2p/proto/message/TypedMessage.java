@@ -4,11 +4,15 @@ import de.tum.p2p.proto.ProtoException;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.val;
+import org.apache.commons.lang3.Validate;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import static java.lang.String.format;
+import static java.util.Arrays.copyOfRange;
 
 /**
  * Represents a {@link Message} implementation that reserves first
@@ -24,9 +28,11 @@ public abstract class TypedMessage implements Message {
     private final int size;
     private final MessageType messageType;
 
-    protected TypedMessage(MessageType messageType, int size) {
+    protected TypedMessage(MessageType messageType, int msgBodySize) {
+        Validate.isTrue(msgBodySize > 0, "Message body size cannot be less or equal 0");
+
         this.messageType = messageType;
-        this.size = size + MessageType.BYTES;
+        this.size = msgBodySize + MessageType.BYTES;
     }
 
     /**
@@ -36,6 +42,19 @@ public abstract class TypedMessage implements Message {
      */
     protected abstract ByteBuffer writeMessage(ByteBuffer typedMessageBuffer);
 
+    /**
+     * Enhances message before futher processing by {@link #bytes()}.
+     * <p>
+     * Goes strictly after {@link #writeMessage(ByteBuffer)} before any validation by
+     * {@link #bytes()}
+     *
+     * @param typedMessageBuffer a ByteBuffer to enhance with message content
+     * @return enhanced message content as a ByteBuffer
+     */
+    protected ByteBuffer enhanceMessage(ByteBuffer typedMessageBuffer) {
+        return typedMessageBuffer;
+    }
+
     @Override
     public final byte[] bytes() {
         val typedMessageBuffer
@@ -43,9 +62,20 @@ public abstract class TypedMessage implements Message {
                         .order(BYTE_ORDER)
                         .putShort(messageType.code());
 
-        val enrichedTypedMessageBuffer = writeMessage(typedMessageBuffer);
+        try {
+            val disassembledTypedMessageBuffer = writeMessage(typedMessageBuffer);
+            val enhancedTypedMessageBuffer = enhanceMessage(disassembledTypedMessageBuffer);
 
-        return enrichedTypedMessageBuffer.array();
+            val rawTypedMessage = convertToExactByteArray(enhancedTypedMessageBuffer);
+
+            if (rawTypedMessage.length != size())
+                throw new ProtoException("Actual size of disassembled message doesn't match the declared value: "
+                    + "expected = " + size() + ", actual = " + rawTypedMessage.length);
+
+            return rawTypedMessage;
+        } catch (BufferOverflowException | BufferUnderflowException e) {
+            throw new ProtoException("Actual size of disassembled message doesn't match the declared value", e);
+        }
     }
 
     @Override
@@ -82,5 +112,10 @@ public abstract class TypedMessage implements Message {
                     "Expected %s, given %s (%s)", type.name(), rawTypedMessageType.name(), rawTypedMessageTypeCode));
 
         return rawTypedMessageBuffer.slice();
+    }
+
+    private static byte[] convertToExactByteArray(ByteBuffer byteBuffer) {
+        val fullSizedArray = byteBuffer.array();
+        return copyOfRange(fullSizedArray, 0, byteBuffer.position());
     }
 }
