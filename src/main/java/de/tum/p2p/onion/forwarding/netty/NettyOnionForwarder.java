@@ -2,8 +2,12 @@ package de.tum.p2p.onion.forwarding.netty;
 
 import de.tum.p2p.Peer;
 import de.tum.p2p.onion.forwarding.*;
+import de.tum.p2p.onion.forwarding.netty.handler.DatagramLengthFieldBasedFrameDecoder;
+import de.tum.p2p.onion.forwarding.netty.handler.DatagramLengthFieldPrepender;
+import de.tum.p2p.onion.forwarding.netty.handler.MissizedDatagramDiscarder;
 import de.tum.p2p.proto.message.Message;
 import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
+import de.tum.p2p.proto.message.onion.forwarding.OnionMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -109,6 +113,7 @@ public class NettyOnionForwarder implements OnionForwarder {
                 // ->O Input decoding & processing
                 pipe.addLast(new DatagramLengthFieldBasedFrameDecoder(FRAME_MAX_LENGTH, 0,
                     FRAME_LENGTH_PREFIX_LENGTH, -FRAME_LENGTH_PREFIX_LENGTH, FRAME_LENGTH_PREFIX_LENGTH, true));
+                pipe.addLast(new MissizedDatagramDiscarder(OnionMessage.BYTES));
 
                 pipe.addLast(new SimpleChannelInboundHandler<DatagramPacket>() {
                     @Override
