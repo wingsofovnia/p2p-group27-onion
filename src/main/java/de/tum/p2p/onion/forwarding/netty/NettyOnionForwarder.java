@@ -3,6 +3,7 @@ package de.tum.p2p.onion.forwarding.netty;
 import de.tum.p2p.Peer;
 import de.tum.p2p.onion.forwarding.*;
 import de.tum.p2p.proto.message.Message;
+import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
@@ -26,6 +27,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class NettyOnionForwarder implements OnionForwarder {
 
@@ -37,7 +39,7 @@ public class NettyOnionForwarder implements OnionForwarder {
     }
 
     // Length-prefix framing
-    private static final int FRAME_LENGTH_PREFIX_LENGTH = 2;
+    private static final int FRAME_LENGTH_PREFIX_LENGTH = Message.LENGTH_PREFIX_BYTES;
     private static final int FRAME_MAX_LENGTH = 64 * 1024;
 
     private final Channel channel;
@@ -64,6 +66,11 @@ public class NettyOnionForwarder implements OnionForwarder {
 
     @Override
     public void cover(int size) throws OnionCoverInterferenceException {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void onDatumArrival(Consumer<DatumOnionMessage> datumOnionMessageConsumer) {
         throw new NotImplementedException();
     }
 

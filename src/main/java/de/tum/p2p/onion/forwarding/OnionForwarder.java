@@ -2,8 +2,10 @@ package de.tum.p2p.onion.forwarding;
 
 import de.tum.p2p.Peer;
 import de.tum.p2p.proto.message.Message;
+import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
 
 import java.io.Closeable;
+import java.util.function.Consumer;
 
 /**
  * The Onion Forwarder is responsible for forwarding data between
@@ -59,4 +61,14 @@ public interface OnionForwarder extends Closeable {
      * @throws OnionCoverInterferenceException in case of sending
      */
     void cover(int size) throws OnionCoverInterferenceException;
+
+    /**
+     * Registers a listener for incoming {@link DatumOnionMessage}.
+     * <p>
+     * {@code OnionForwarder} will fire {@link Consumer#accept(Object)} on each incoming
+     * {@link DatumOnionMessage}.
+     *
+     * @param datumOnionMessageConsumer listener implementation (lambda)
+     */
+    void onDatumArrival(final Consumer<DatumOnionMessage> datumOnionMessageConsumer);
 }

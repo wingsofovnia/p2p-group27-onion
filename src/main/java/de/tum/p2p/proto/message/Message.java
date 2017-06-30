@@ -12,6 +12,11 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 public interface Message {
 
     /**
+     * A length of the message length prefix used for framing messages
+     */
+    int LENGTH_PREFIX_BYTES = 2;
+
+    /**
      * Returns a length of byte array that represents the
      * content of the Message
      * @return size of the Message in BYTES

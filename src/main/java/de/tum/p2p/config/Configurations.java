@@ -8,6 +8,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Optional;
 
+import static org.apache.commons.codec.binary.StringUtils.getBytesUtf8;
+import static org.apache.commons.lang3.ArrayUtils.toObject;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
@@ -35,6 +37,7 @@ public class Configurations {
     private static final String ONION_IP_ADDRESS_KEY = "api_address";
     private static final String ONION_PORT_KEY = "port";
     private static final String ONION_MIN_HOPS_KEY = "min_hops";
+    private static final String ONION_DATUM_HMAC_SECRET = "hmac_secret";
 
     private final Wini appConfig;
 
@@ -111,6 +114,21 @@ public class Configurations {
             return Optional.empty();
 
         return Optional.ofNullable(Integer.valueOf(onionHopsStr));
+    }
+
+    /**
+     * Loads {@link Configurations#ONION_DATUM_HMAC_SECRET} property's value from
+     * {@link Configurations#ONION_SECTION_SELECTION} ini section
+     *
+     * @return {@link Configurations#ONION_DATUM_HMAC_SECRET} property
+     */
+    public Optional<Byte[]> onionHmacSecret() {
+        val onionHmacSecret = appConfig.get(ONION_SECTION_SELECTION, ONION_DATUM_HMAC_SECRET, String.class);
+
+        if (isBlank(onionHmacSecret))
+            return Optional.empty();
+
+        return Optional.ofNullable(toObject(getBytesUtf8(onionHmacSecret)));
     }
 
     /**
