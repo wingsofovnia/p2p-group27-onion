@@ -90,7 +90,7 @@ public class NettyOnionForwarder implements OnionForwarder {
     }
 
     private Channel buildServerChannel(InetAddress inetAddress, Integer port,
-                                       Class<? extends Channel> channel, EventLoopGroup eventExecutors,
+                                       Class<? extends DatagramChannel> channel, EventLoopGroup eventExecutors,
                                        Map<ChannelOption, Object> opts, LogLevel logLevel) {
         log.debug("Initializing server channel on {}:{}, channel {}, opts {}, logger level {}",
             inetAddress.getHostAddress(), port, channel.getName(), opts.toString(), logLevel);
@@ -100,7 +100,6 @@ public class NettyOnionForwarder implements OnionForwarder {
         b.group(eventExecutors)
             .channel(channel);
         opts.forEach(b::option);
-
 
         b.handler(new ChannelInitializer<DatagramChannel>() {
             @Override
@@ -175,8 +174,6 @@ public class NettyOnionForwarder implements OnionForwarder {
                 // ignore (since it's just a default value
             }
             this.port = DEFAULT_PORT;
-
-            this.loggerLevel = null;
         }
 
         public NettyOnionForwarderBuilder eventLoopExecutors(EventLoopGroup serverExecutors) {

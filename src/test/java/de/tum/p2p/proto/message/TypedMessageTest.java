@@ -15,16 +15,6 @@ import static org.junit.Assert.assertTrue;
 public class TypedMessageTest {
 
     @Test(expected = IllegalArgumentException.class)
-    public void throwsExceptionOn0SizedMessage() {
-        new TypedMessage(MessageType.ONION_COVER, 0) {
-            @Override
-            protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
-                return null;
-            }
-        };
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void throwsExceptionOnNegativeSizedMessage() {
         new TypedMessage(MessageType.ONION_COVER, -1) {
             @Override

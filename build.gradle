@@ -47,6 +47,8 @@ dependencies {
 
     testCompile group: 'junit', name: 'junit', version: dependencyVersions.test.junit
     testCompile group: 'org.mockito', name: 'mockito-all', version: dependencyVersions.test.mockito
+
+    testCompile files('lib/voip.jar')
 }
 
 clean {

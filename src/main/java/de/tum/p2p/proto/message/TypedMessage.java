@@ -29,7 +29,7 @@ public abstract class TypedMessage implements Message {
     private final MessageType messageType;
 
     protected TypedMessage(MessageType messageType, int msgBodySize) {
-        Validate.isTrue(msgBodySize > 0, "Message body size cannot be less or equal 0");
+        Validate.isTrue(msgBodySize >= 0, "Message body size cannot be less or equal 0");
 
         this.messageType = messageType;
         this.size = msgBodySize + MessageType.BYTES;

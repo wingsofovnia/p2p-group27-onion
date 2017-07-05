@@ -5,6 +5,10 @@ import lombok.val;
 public enum MessageType {
     UNKNOWN(0),
 
+    // RPS API / TCP
+    RPS_QUERY(540),
+    RPS_PEER(541),
+
     // ONION API / TCP
     ONION_TUNNEL_BUILD(560),
     ONION_TUNNEL_READY(561),
