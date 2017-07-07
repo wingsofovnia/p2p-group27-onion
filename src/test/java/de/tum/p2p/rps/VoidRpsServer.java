@@ -2,6 +2,7 @@ package de.tum.p2p.rps;
 
 import de.tum.p2p.Peer;
 import de.tum.p2p.Peers;
+import de.tum.p2p.proto.message.Message;
 import de.tum.p2p.voidphone.rps.api.RpsPeerMessage;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -12,8 +13,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import lombok.val;
 
 import java.io.Closeable;
@@ -34,6 +38,13 @@ import static de.tum.p2p.VoidApiMessages.toByteBuf;
  * and uses message definitions from voidphone testing suite.
  */
 public class VoidRpsServer implements Closeable {
+
+    private static final int FRAME_LENGTH_PREFIX_LENGTH = Message.LENGTH_PREFIX_BYTES;
+
+    static {
+        // Enable Netty to use Sl4j
+        InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
+    }
 
     private final List<Peer> peerDatabase = new ArrayList<>();
 
@@ -57,11 +68,13 @@ public class VoidRpsServer implements Closeable {
         val b = new ServerBootstrap();
         b.group(bossGroup, workerGroup)
             .channel(NioServerSocketChannel.class)
-            .handler(new LoggingHandler(LogLevel.INFO))
             .childHandler(new ChannelInitializer<SocketChannel>() { // (4)
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
                     ch.pipeline()
+                        .addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0,
+                            FRAME_LENGTH_PREFIX_LENGTH, -FRAME_LENGTH_PREFIX_LENGTH, FRAME_LENGTH_PREFIX_LENGTH, true))
+                        .addLast(new LoggingHandler(LogLevel.DEBUG))
                         .addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                             @Override
                             protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {

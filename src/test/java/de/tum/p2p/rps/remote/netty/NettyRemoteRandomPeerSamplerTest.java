@@ -2,6 +2,7 @@ package de.tum.p2p.rps.remote.netty;
 
 import de.tum.p2p.Peer;
 import de.tum.p2p.rps.VoidRpsServer;
+import io.netty.handler.logging.LogLevel;
 import lombok.val;
 import org.junit.Test;
 
@@ -37,7 +38,7 @@ public class NettyRemoteRandomPeerSamplerTest {
     private static final int RANDOM_PEERS_SAMPLINGS = RANDOM_PEERS_AMOUNT * 2;
 
     @Test
-    public void validateRemoteRpsSampling() throws Exception {
+    public void samplesRandomPeerCorrectly() throws Exception {
         try (val voidRpsServer = new VoidRpsServer(RPS_SERVER_HOST, RPS_SERVER_PORT, RANDOM_PEERS)) {
             val remoteRPSbuilder
                 = new NettyRemoteRandomPeerSampler.Builder()
@@ -51,7 +52,25 @@ public class NettyRemoteRandomPeerSamplerTest {
                     assertTrue(RANDOM_PEERS.contains(randPeer));
                 }
             }
+        }
+    }
 
+    @Test
+    public void samplesMultipleRandomPeersCorrectly() throws Exception {
+        try (val voidRpsServer = new VoidRpsServer(RPS_SERVER_HOST, RPS_SERVER_PORT, RANDOM_PEERS)) {
+            val remoteRPSbuilder
+                = new NettyRemoteRandomPeerSampler.Builder()
+                .inetAddress(RPS_SERVER_HOST)
+                .loggerLevel(LogLevel.INFO)
+                .port(RPS_SERVER_PORT);
+
+            try (val rps = remoteRPSbuilder.build()) {
+                val futureRandomSampledPeers = rps.sample(RANDOM_PEERS_AMOUNT);
+                 val randomSampledPeers = futureRandomSampledPeers.get();
+
+                randomSampledPeers.forEach(randPeer
+                    -> assertTrue(RANDOM_PEERS.contains(randPeer)));
+            }
         }
     }
 }
