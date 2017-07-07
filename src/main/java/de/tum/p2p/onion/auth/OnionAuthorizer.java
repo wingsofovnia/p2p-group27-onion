@@ -1,8 +1,9 @@
 package de.tum.p2p.onion.auth;
 
 import de.tum.p2p.Peer;
-import de.tum.p2p.proto.message.Message;
+import lombok.val;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +19,7 @@ import java.util.Optional;
 public interface OnionAuthorizer {
 
     /**
-     * Returns all active {@link Session}s that passes Diffie–Hellman key
+     * Returns all active {@link Session}s that passed Diffie–Hellman key
      * exchange
      *
      * @return list of active sessions
@@ -26,17 +27,18 @@ public interface OnionAuthorizer {
     List<Session> sessions();
 
     /**
-     * Creates and instance of {@link Handshaker} that is used to pass
-     * Diffie–Hellman key exchange and create new {@link Session}
-     * @return
+     * Creates and instance of {@link SessionFactory} that is used to perform
+     * Diffie–Hellman key exchange and create new {@link Session} (shared secret)
+     *
+     * @return a new SessionFactory instance
      */
-    Handshaker handshaker();
+    SessionFactory sessionFactory();
 
     /**
      * Queries all active {@link Session}s for one with specific origin and
      * destination {@link Peer}s
      *
-     * @param origin a data Tunnel's origin {@link Peer}
+     * @param origin      a data Tunnel's origin {@link Peer}
      * @param destination a data Tunnel's destination {@link Peer}
      * @return a corresponding {@link Session}
      */
@@ -60,28 +62,48 @@ public interface OnionAuthorizer {
     /**
      * Layer-encrypts a message for given {@link Session}s.
      *
-     * @param message a payload to encrypt
-     * @param layers  {@link Session}s used for encryption
+     * @param message  a payload to encrypt
+     * @param session  {@link Session}s used for encryption
+     * @param sessions additional {@link Session}s used for layered encryption
      * @return encrypted payload
      * @throws OnionEncryptionException in case of problems during data encryption
      */
-    Message encrypt(Message message, Session... layers) throws OnionEncryptionException;
+    ByteBuffer encrypt(ByteBuffer message, Session session, Session... sessions) throws OnionEncryptionException;
 
-    default Message encrypt(Message message,  List<Session> layers) throws OnionEncryptionException {
-        return encrypt(message, layers.toArray(new Session[layers.size()]));
+    default ByteBuffer encrypt(ByteBuffer message, List<Session> sessions) throws OnionEncryptionException {
+        if (sessions.isEmpty())
+            throw new IllegalArgumentException("At least one session is required for encryption");
+
+        if (sessions.size() == 1)
+            return encrypt(message, sessions.get(0));
+
+        val sessionArg = sessions.get(0);
+        val sessionsArg = sessions.stream().skip(1).toArray(Session[]::new);
+
+        return encrypt(message, sessionArg, sessionsArg);
     }
 
     /**
      * Layer-decrypts a message for given {@link Session}s.
      *
      * @param ciphertext a payload to decrypt
-     * @param layers     {@link Session}s used for decryption
+     * @param session    {@link Session}s used for decryption
+     * @param sessions   additional {@link Session}s used for layered decryption
      * @return decrypted Message
      * @throws OnionDecryptionException in case of problems during data encryption
      */
-    Message decrypt(Message ciphertext, Session... layers) throws OnionDecryptionException;
+    ByteBuffer decrypt(ByteBuffer ciphertext, Session session, Session... sessions) throws OnionDecryptionException;
 
-    default Message decrypt(Message ciphertext, List<Session> layers) throws OnionDecryptionException {
-        return decrypt(ciphertext, layers.toArray(new Session[layers.size()]));
+    default ByteBuffer decrypt(ByteBuffer ciphertext, List<Session> sessions) throws OnionDecryptionException {
+        if (sessions.isEmpty())
+            throw new IllegalArgumentException("At least one session is required for decryption");
+
+        if (sessions.size() == 1)
+            return decrypt(ciphertext, sessions.get(0));
+
+        val sessionArg = sessions.get(0);
+        val sessionsArg = sessions.stream().skip(1).toArray(Session[]::new);
+
+        return decrypt(ciphertext, sessionArg, sessionsArg);
     }
 }

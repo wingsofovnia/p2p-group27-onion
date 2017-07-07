@@ -25,4 +25,8 @@ public class Session {
         this.destination = notNull(destination);
         this.sessionId = notNull(sessionId);
     }
+
+    public static Session of(Peer origin, Peer destination, Integer sessionId) {
+        return new Session(origin, destination, sessionId);
+    }
 }
