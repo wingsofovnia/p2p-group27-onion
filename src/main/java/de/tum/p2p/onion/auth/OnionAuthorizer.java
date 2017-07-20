@@ -6,6 +6,7 @@ import lombok.val;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * {@code OnionAuthorizer} encapsulates authentication and encryption
@@ -68,13 +69,18 @@ public interface OnionAuthorizer {
      * @return a ciphertext
      * @throws OnionEncryptionException in case of problems during data encryption
      */
-    Ciphertext encrypt(ByteBuffer plaintext, Session session, Session... sessions) throws OnionEncryptionException;
+    CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, Session session, Session... sessions)
+            throws OnionEncryptionException;
 
-    default Ciphertext encrypt(byte[] plaintext, Session session, Session... sessions) throws OnionEncryptionException {
+    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, Session session, Session... sessions)
+            throws OnionEncryptionException {
+
         return encrypt(ByteBuffer.wrap(plaintext), session, sessions);
     }
 
-    default Ciphertext encrypt(ByteBuffer plaintext, List<Session> sessions) throws OnionEncryptionException {
+    default CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, List<Session> sessions)
+            throws OnionEncryptionException {
+
         if (sessions.isEmpty())
             throw new IllegalArgumentException("At least one session is required for encryption");
 
@@ -87,7 +93,9 @@ public interface OnionAuthorizer {
         return encrypt(plaintext, sessionArg, sessionsArg);
     }
 
-    default Ciphertext encrypt(byte[] plaintext, List<Session> sessions) throws OnionEncryptionException {
+    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, List<Session> sessions)
+            throws OnionEncryptionException {
+
         return encrypt(ByteBuffer.wrap(plaintext), sessions);
     }
 
@@ -100,13 +108,17 @@ public interface OnionAuthorizer {
      * @return decrypted ciphertext
      * @throws OnionDecryptionException in case of problems during data encryption
      */
-    Deciphertext decrypt(ByteBuffer ciphertext, Session session) throws OnionDecryptionException;
+    CompletableFuture<Deciphertext> decrypt(ByteBuffer ciphertext, Session session) throws OnionDecryptionException;
 
-    default Deciphertext decrypt(Ciphertext ciphertext, Session session) throws OnionDecryptionException {
+    default CompletableFuture<Deciphertext> decrypt(Ciphertext ciphertext, Session session)
+            throws OnionDecryptionException {
+
         return decrypt(ciphertext.bytesBuffer(), session);
     }
 
-    default Deciphertext decrypt(byte[] ciphertext, Session session) throws OnionDecryptionException {
+    default CompletableFuture<Deciphertext> decrypt(byte[] ciphertext, Session session)
+            throws OnionDecryptionException {
+
         return decrypt(ByteBuffer.wrap(ciphertext), session);
     }
 }
