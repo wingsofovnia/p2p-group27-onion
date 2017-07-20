@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * {@code OnionAuthorizer} encapsulates authentication mechanisms
- * used while building onion tunnels. It implements establishing
- * session keys given hostkeys of hops, and onion layer-encryption
- * and decryption of payload data.
+ * {@code OnionAuthorizer} encapsulates authentication and encryption
+ * mechanisms used while building onion tunnels. It implements establishing
+ * session keys given hostkeys of hops, and onion layer-encryption &
+ * decryption of payload data.
  *
  * @see <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange">
  * Wikipedia - Diffie–Hellman key exchange</a>
@@ -42,7 +42,7 @@ public interface OnionAuthorizer {
      * @param destination a data Tunnel's destination {@link Peer}
      * @return a corresponding {@link Session}
      */
-    default Optional<Session> session(Peer origin, Peer destination) {
+    default Optional<Session> findSession(Peer origin, Peer destination) {
         return sessions().stream().filter(s -> s.origin().equals(origin))
                                   .filter(s -> s.destination().equals(destination))
                                   .findFirst();
@@ -54,56 +54,59 @@ public interface OnionAuthorizer {
      * @param destination a data Tunnel's destination {@link Peer}
      * @return a corresponding {@link Session}
      */
-    default Optional<Session> session(Peer destination) {
+    default Optional<Session> findSession(Peer destination) {
         return sessions().stream().filter(s -> s.destination().equals(destination))
                                   .findAny();
     }
 
     /**
-     * Layer-encrypts a message for given {@link Session}s.
+     * Encapsulates plaintext in layers of encryption, analogous to layers of an onion.
      *
-     * @param message  a payload to encrypt
-     * @param session  {@link Session}s used for encryption
-     * @param sessions additional {@link Session}s used for layered encryption
-     * @return encrypted payload
+     * @param plaintext a plaintext to encrypt
+     * @param session   {@link Session}s used for encryption
+     * @param sessions  additional {@link Session}s used for layered encryption
+     * @return a ciphertext
      * @throws OnionEncryptionException in case of problems during data encryption
      */
-    ByteBuffer encrypt(ByteBuffer message, Session session, Session... sessions) throws OnionEncryptionException;
+    Ciphertext encrypt(ByteBuffer plaintext, Session session, Session... sessions) throws OnionEncryptionException;
 
-    default ByteBuffer encrypt(ByteBuffer message, List<Session> sessions) throws OnionEncryptionException {
+    default Ciphertext encrypt(byte[] plaintext, Session session, Session... sessions) throws OnionEncryptionException {
+        return encrypt(ByteBuffer.wrap(plaintext), session, sessions);
+    }
+
+    default Ciphertext encrypt(ByteBuffer plaintext, List<Session> sessions) throws OnionEncryptionException {
         if (sessions.isEmpty())
             throw new IllegalArgumentException("At least one session is required for encryption");
 
         if (sessions.size() == 1)
-            return encrypt(message, sessions.get(0));
+            return encrypt(plaintext, sessions.get(0));
 
         val sessionArg = sessions.get(0);
         val sessionsArg = sessions.stream().skip(1).toArray(Session[]::new);
 
-        return encrypt(message, sessionArg, sessionsArg);
+        return encrypt(plaintext, sessionArg, sessionsArg);
+    }
+
+    default Ciphertext encrypt(byte[] plaintext, List<Session> sessions) throws OnionEncryptionException {
+        return encrypt(ByteBuffer.wrap(plaintext), sessions);
     }
 
     /**
-     * Layer-decrypts a message for given {@link Session}s.
+     * Peels away a single layer of encryption made by
+     * {@link OnionAuthorizer#encrypt(ByteBuffer, Session, Session...)}
      *
-     * @param ciphertext a payload to decrypt
-     * @param session    {@link Session}s used for decryption
-     * @param sessions   additional {@link Session}s used for layered decryption
-     * @return decrypted Message
+     * @param ciphertext a ciphertext to decrypt
+     * @param session    a {@link Session} used for decryption one layer
+     * @return decrypted ciphertext
      * @throws OnionDecryptionException in case of problems during data encryption
      */
-    ByteBuffer decrypt(ByteBuffer ciphertext, Session session, Session... sessions) throws OnionDecryptionException;
+    Deciphertext decrypt(ByteBuffer ciphertext, Session session) throws OnionDecryptionException;
 
-    default ByteBuffer decrypt(ByteBuffer ciphertext, List<Session> sessions) throws OnionDecryptionException {
-        if (sessions.isEmpty())
-            throw new IllegalArgumentException("At least one session is required for decryption");
+    default Deciphertext decrypt(Ciphertext ciphertext, Session session) throws OnionDecryptionException {
+        return decrypt(ciphertext.bytesBuffer(), session);
+    }
 
-        if (sessions.size() == 1)
-            return decrypt(ciphertext, sessions.get(0));
-
-        val sessionArg = sessions.get(0);
-        val sessionsArg = sessions.stream().skip(1).toArray(Session[]::new);
-
-        return decrypt(ciphertext, sessionArg, sessionsArg);
+    default Deciphertext decrypt(byte[] ciphertext, Session session) throws OnionDecryptionException {
+        return decrypt(ByteBuffer.wrap(ciphertext), session);
     }
 }
