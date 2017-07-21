@@ -21,7 +21,7 @@ public interface OnionForwarder extends Closeable {
      * <li>Samples {@code hops} random peers using {@link de.tum.p2p.rps.RandomPeerSampler}</li>
      * <li>Establish secure connection with each sampled peer with
      * {@link de.tum.p2p.onion.auth.OnionAuthorizer}</li>
-     * <li>Remembers sampled peers and corresponding {@link de.tum.p2p.onion.auth.Session}s
+     * <li>Remembers sampled peers and corresponding {@link de.tum.p2p.onion.auth.SessionId}s
      * as a Tunnel</li>
      * </ol>
      *

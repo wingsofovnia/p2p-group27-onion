@@ -11,7 +11,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 
 /**
  * Encapsulates the result of encryption performed on plaintext
- * using {@link OnionAuthorizer#encrypt(ByteBuffer, Session, Session...)}
+ * using {@link OnionAuthorizer#encrypt(ByteBuffer, SessionId, SessionId...)}
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)

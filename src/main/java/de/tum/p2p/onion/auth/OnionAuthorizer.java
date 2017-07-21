@@ -1,11 +1,9 @@
 package de.tum.p2p.onion.auth;
 
-import de.tum.p2p.Peer;
 import lombok.val;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -19,81 +17,49 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface OnionAuthorizer {
 
-    /**
-     * Returns all active {@link Session}s that passed Diffie–Hellman key
-     * exchange
-     *
-     * @return list of active sessions
-     */
-    List<Session> sessions();
 
     /**
      * Creates and instance of {@link SessionFactory} that is used to perform
-     * Diffie–Hellman key exchange and create new {@link Session} (shared secret)
+     * Diffie–Hellman key exchange and create new {@link SessionId} (shared secret)
      *
      * @return a new SessionFactory instance
      */
     SessionFactory sessionFactory();
 
     /**
-     * Queries all active {@link Session}s for one with specific origin and
-     * destination {@link Peer}s
-     *
-     * @param origin      a data Tunnel's origin {@link Peer}
-     * @param destination a data Tunnel's destination {@link Peer}
-     * @return a corresponding {@link Session}
-     */
-    default Optional<Session> findSession(Peer origin, Peer destination) {
-        return sessions().stream().filter(s -> s.origin().equals(origin))
-                                  .filter(s -> s.destination().equals(destination))
-                                  .findFirst();
-    }
-
-    /**
-     * Queries all active {@link Session}s for one with specific origin {@link Peer}
-     *
-     * @param destination a data Tunnel's destination {@link Peer}
-     * @return a corresponding {@link Session}
-     */
-    default Optional<Session> findSession(Peer destination) {
-        return sessions().stream().filter(s -> s.destination().equals(destination))
-                                  .findAny();
-    }
-
-    /**
      * Encapsulates plaintext in layers of encryption, analogous to layers of an onion.
      *
      * @param plaintext a plaintext to encrypt
-     * @param session   {@link Session}s used for encryption
-     * @param sessions  additional {@link Session}s used for layered encryption
+     * @param sessionId {@link SessionId}s used for encryption
+     * @param sessions  additional {@link SessionId}s used for layered encryption
      * @return a ciphertext
      * @throws OnionEncryptionException in case of problems during data encryption
      */
-    CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, Session session, Session... sessions)
+    CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, SessionId sessionId, SessionId... sessions)
             throws OnionEncryptionException;
 
-    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, Session session, Session... sessions)
+    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, SessionId sessionId, SessionId... sessions)
             throws OnionEncryptionException {
 
-        return encrypt(ByteBuffer.wrap(plaintext), session, sessions);
+        return encrypt(ByteBuffer.wrap(plaintext), sessionId, sessions);
     }
 
-    default CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, List<Session> sessions)
+    default CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, List<SessionId> sessions)
             throws OnionEncryptionException {
 
         if (sessions.isEmpty())
-            throw new IllegalArgumentException("At least one session is required for encryption");
+            throw new IllegalArgumentException("At least one sessionId is required for encryption");
 
         if (sessions.size() == 1)
             return encrypt(plaintext, sessions.get(0));
 
         val sessionArg = sessions.get(0);
-        val sessionsArg = sessions.stream().skip(1).toArray(Session[]::new);
+        val sessionsArg = sessions.stream().skip(1).toArray(SessionId[]::new);
 
         return encrypt(plaintext, sessionArg, sessionsArg);
     }
 
-    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, List<Session> sessions)
+    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, List<SessionId> sessions)
             throws OnionEncryptionException {
 
         return encrypt(ByteBuffer.wrap(plaintext), sessions);
@@ -101,24 +67,24 @@ public interface OnionAuthorizer {
 
     /**
      * Peels away a single layer of encryption made by
-     * {@link OnionAuthorizer#encrypt(ByteBuffer, Session, Session...)}
+     * {@link OnionAuthorizer#encrypt(ByteBuffer, SessionId, SessionId...)}
      *
      * @param ciphertext a ciphertext to decrypt
-     * @param session    a {@link Session} used for decryption one layer
+     * @param sessionId  a {@link SessionId} used for decryption one layer
      * @return decrypted ciphertext
      * @throws OnionDecryptionException in case of problems during data encryption
      */
-    CompletableFuture<Deciphertext> decrypt(ByteBuffer ciphertext, Session session) throws OnionDecryptionException;
+    CompletableFuture<Deciphertext> decrypt(ByteBuffer ciphertext, SessionId sessionId) throws OnionDecryptionException;
 
-    default CompletableFuture<Deciphertext> decrypt(Ciphertext ciphertext, Session session)
+    default CompletableFuture<Deciphertext> decrypt(Ciphertext ciphertext, SessionId sessionId)
             throws OnionDecryptionException {
 
-        return decrypt(ciphertext.bytesBuffer(), session);
+        return decrypt(ciphertext.bytesBuffer(), sessionId);
     }
 
-    default CompletableFuture<Deciphertext> decrypt(byte[] ciphertext, Session session)
+    default CompletableFuture<Deciphertext> decrypt(byte[] ciphertext, SessionId sessionId)
             throws OnionDecryptionException {
 
-        return decrypt(ByteBuffer.wrap(ciphertext), session);
+        return decrypt(ByteBuffer.wrap(ciphertext), sessionId);
     }
 }

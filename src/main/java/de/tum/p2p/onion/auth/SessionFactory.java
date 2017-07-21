@@ -1,6 +1,7 @@
 package de.tum.p2p.onion.auth;
 
 import de.tum.p2p.Peer;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
@@ -22,9 +23,9 @@ public interface SessionFactory {
      * AUTH SESSION HS1's handshake payload form the spec.
      *
      * @param destination destination
-     * @return a Handshake 1 payload (Alice's)
+     * @return a Handshake 1 payload (Alice's) and corresponding {@link SessionId}
      */
-    CompletableFuture<Handshake> start(Peer destination);
+    CompletableFuture<Pair<SessionId, ByteBuffer>> start(Peer destination);
 
     /**
      * Receives a (Alice's) public secret and responses with personal (Bob's)
@@ -34,18 +35,27 @@ public interface SessionFactory {
      * AUTH SESSION HS2's handshake payload form the spec.
      *
      * @param hs1 a Handshake 1 payload (Alice's)
-     * @return a Handshake 2 payload (Bob's)
+     * @return a Handshake 2 payload (Bob's) and corresponding {@link SessionId}
      */
-    CompletableFuture<Handshake> responseTo(Handshake hs1);
+    CompletableFuture<Pair<SessionId, ByteBuffer>> responseTo(ByteBuffer hs1);
+
+    default CompletableFuture<Pair<SessionId, ByteBuffer>> responseTo(byte[] hs1) {
+        return responseTo(ByteBuffer.wrap(hs1));
+    }
 
     /**
      * Receives (Bob's) public key and finishes session key establishment.
-     * This also must register newly created Session within {@link OnionAuthorizer}
+     * This also must register newly created session within {@link OnionAuthorizer}
      * that initialized this SessionFactory.
      * <p>
      * The method call corresponds to AUTH SESSION INCOMING HS2  form the spec.
      *
      * @param hs2 a Handshake 2 payload (Bob's)
+     * @return a SessionId between parties (Alice and Bob)
      */
-    void complete(Handshake hs2);
+    CompletableFuture<SessionId> confirm(ByteBuffer hs2);
+
+    default CompletableFuture<SessionId> confirm(byte[] hs2) {
+        return confirm(ByteBuffer.wrap(hs2));
+    }
 }
