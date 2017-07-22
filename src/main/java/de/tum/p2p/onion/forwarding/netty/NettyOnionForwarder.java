@@ -37,10 +37,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 import static de.tum.p2p.util.Nets.localhost;
@@ -246,7 +243,12 @@ public class NettyOnionForwarder implements OnionForwarder {
 
     @Override
     public void cover(int size) throws OnionCoverInterferenceException {
-        throw new NotImplementedException();
+        val coverData = new byte[size];
+        ThreadLocalRandom.current().nextBytes(coverData);
+
+        rps.sample()
+            .thenCompose(randPeer -> clientChannelFactory.connect(randPeer.socketAddress()))
+            .thenAccept(channel -> channel.writeAndFlush(coverData));
     }
 
     @Override
