@@ -2,7 +2,8 @@ package de.tum.p2p.onion.forwarding.netty.channel;
 
 import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
-import de.tum.p2p.onion.forwarding.netty.TunnelRouter;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
+import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelDatumHandler;
 import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelExtendHandler;
 import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelExtendPropagator;
 import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelRetireHandler;
@@ -59,7 +60,7 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
         this.randomPeerSampler = notNull(builder.randomPeerSampler);
         this.onionAuthorizer = notNull(builder.onionAuthorizer);
         this.clientChannelFactory = notNull(builder.clientChannelFactory);
-        this.tunnelRouter = notNull(builder.tunnelRouter);
+        this.router = notNull(builder.router);
 
         this.eventBus = notNull(builder.eventBus);
 
@@ -90,9 +91,10 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
 
     private ChannelInitializer serverPipeline() {
         return messagingChannel(pipe -> {
-            pipe.addLast(new TunnelRetireHandler(tunnelRouter, eventBus));
-            pipe.addLast(new TunnelExtendHandler(onionAuthorizer));
-            pipe.addLast(new TunnelExtendPropagator(clientChannelFactory, tunnelRouter));
+            pipe.addLast(new TunnelDatumHandler(onionAuthorizer, router, eventBus));
+            pipe.addLast(new TunnelRetireHandler(router));
+            pipe.addLast(new TunnelExtendHandler(onionAuthorizer, router));
+            pipe.addLast(new TunnelExtendPropagator(clientChannelFactory, router));
         });
     }
 
@@ -117,7 +119,7 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
         private ClientChannelFactory clientChannelFactory;
 
         private OnionAuthorizer onionAuthorizer;
-        private TunnelRouter tunnelRouter;
+        private Router router;
 
         private EventBus eventBus;
 
@@ -163,8 +165,8 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
             return this;
         }
 
-        public ServerChannelFactoryBuilder tunnelRouter(TunnelRouter tunnelRouter) {
-            this.tunnelRouter = tunnelRouter;
+        public ServerChannelFactoryBuilder router(Router router) {
+            this.router = router;
             return this;
         }
 

@@ -1,6 +1,7 @@
 package de.tum.p2p.onion.forwarding.netty.handler.server;
 
 import de.tum.p2p.onion.auth.OnionAuthorizer;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import io.netty.channel.ChannelHandlerContext;
@@ -11,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+
+import static de.tum.p2p.onion.forwarding.netty.context.Route.from;
 
 /**
  * {@code TunnelExtendHandler} handles ONION_TUNNEL_EXTEND messages that are designated
@@ -25,9 +28,11 @@ public class TunnelExtendHandler extends MessageToMessageDecoder<TunnelExtendMes
     private static final Logger log = LoggerFactory.getLogger(TunnelExtendHandler.class);
 
     private final OnionAuthorizer onionAuth;
+    private final Router router;
 
-    public TunnelExtendHandler(OnionAuthorizer onionAuth) {
+    public TunnelExtendHandler(OnionAuthorizer onionAuth, Router router) {
         this.onionAuth = onionAuth;
+        this.router = router;
     }
 
     @Override
@@ -50,11 +55,15 @@ public class TunnelExtendHandler extends MessageToMessageDecoder<TunnelExtendMes
                 extendDestination, requestId);
 
             val hs1 = tunnelExtendMsg.handshake();
-            val futureHs2 = onionAuth.sessionFactory().responseTo(hs1);
+            val futureSessionIdHs2Pair = onionAuth.sessionFactory().responseTo(hs1);
 
-            futureHs2.thenAccept(sessionIdHs2Pair -> {
-                val tunnelExtendedMsg = TunnelExtendedMessage.of(tunnelId, requestId, sessionIdHs2Pair.getRight());
+            futureSessionIdHs2Pair.thenAccept(sessionIdHs2Pair -> {
+                val sessionId = sessionIdHs2Pair.getLeft();
+                val hs2 = sessionIdHs2Pair.getRight();
 
+                router.route(from(tunnelId, ctx.channel(), sessionId));
+
+                val tunnelExtendedMsg = TunnelExtendedMessage.of(tunnelId, requestId, hs2);
                 ctx.writeAndFlush(tunnelExtendedMsg);
                 log.debug("[{}][{}] ONION_TUNNEL_EXTENDED with HS2 has been sent back to {}, req_id = {}",
                     ctx.channel().localAddress(), tunnelId,

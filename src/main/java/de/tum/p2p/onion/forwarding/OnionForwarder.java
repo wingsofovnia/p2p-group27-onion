@@ -1,12 +1,12 @@
 package de.tum.p2p.onion.forwarding;
 
 import de.tum.p2p.Peer;
-import de.tum.p2p.proto.message.Message;
-import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage;
 
 import java.io.Closeable;
+import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * The Onion Forwarder is responsible for forwarding data between
@@ -38,7 +38,7 @@ public interface OnionForwarder extends Closeable {
      * Instructs {@link OnionForwarder} that Tunnel is no longer in use and it can
      * be destroyed.
      *
-     * @param tunnelId a data Tunnel to be destroyed
+     * @param tunnelId a data Tunnel id to be destroyed
      * @throws OnionTunnelingException in case of unexpected error during Tunnel destroying
      */
     void destroyTunnel(TunnelId tunnelId) throws OnionTunnelingException;
@@ -46,31 +46,37 @@ public interface OnionForwarder extends Closeable {
     /**
      * Forwards data through the data Tunnel given
      *
-     * @param tunnelId  a data Tunnel to be used as a data pipe
-     * @param message a msg that should be forwarded
+     * @param tunnelId a data Tunnel id to be used as a data pipe
+     * @param data     to be forwarded
      * @throws OnionDataForwardingException in case of unexpected error during data forwarding
      */
-    void forward(TunnelId tunnelId, Message message) throws OnionDataForwardingException;
+    void forward(TunnelId tunnelId, ByteBuffer data) throws OnionDataForwardingException;
 
     /**
      * Generates cover traffic which is sent to a random destination, used to
      * fabricate cover traffic mimicking the characteristics of real traffic.
      *
-     * @param size amount of random bytes on the Tunnel established
-     *             to a random destination
+     * @param size amount of random bytes to send
      * @throws OnionCoverInterferenceException in case of sending
      */
     void cover(int size) throws OnionCoverInterferenceException;
 
     /**
-     * Registers a listener for incoming {@link DatumOnionMessage}.
+     * Registers a listener for incoming data message
      * <p>
-     * {@code OnionForwarder} will fire {@link Consumer#accept(Object)} on each incoming
-     * {@link DatumOnionMessage}.
+     * {@code OnionForwarder} will fire {@link BiConsumer#accept(Object, Object)} on
+     * each incoming {@link TunnelDatumMessage}.
      *
-     * @param datumOnionMessageConsumer listener implementation (lambda)
+     * @param consumer arrived data consumer (lambda)
      */
-    void onDatumArrival(final Consumer<DatumOnionMessage> datumOnionMessageConsumer);
+    void subscribe(final BiConsumer<TunnelId, ByteBuffer> consumer);
+
+    /**
+     * Unregister a listener from consuming incoming data messages
+     *
+     * @param consumer arrived data consumer (lambda)
+     */
+    void unsubscribe(final BiConsumer<TunnelId, ByteBuffer> consumer);
 
     /**
      * Generates a {@link Peer} info object with peer connection detains and public key

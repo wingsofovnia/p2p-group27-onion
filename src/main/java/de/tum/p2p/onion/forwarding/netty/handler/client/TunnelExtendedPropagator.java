@@ -1,7 +1,7 @@
 package de.tum.p2p.onion.forwarding.netty.handler.client;
 
 import de.tum.p2p.onion.forwarding.OnionTunnelingException;
-import de.tum.p2p.onion.forwarding.netty.TunnelRouter;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,10 +22,10 @@ public class TunnelExtendedPropagator extends MessageToMessageDecoder<TunnelExte
 
     private static final Logger log = LoggerFactory.getLogger(TunnelExtendedPropagator.class);
 
-    private final TunnelRouter tunnelRouter;
+    private final Router router;
 
-    public TunnelExtendedPropagator(TunnelRouter tunnelRouter) {
-        this.tunnelRouter = tunnelRouter;
+    public TunnelExtendedPropagator(Router router) {
+        this.router = router;
     }
 
     @Override
@@ -34,7 +34,7 @@ public class TunnelExtendedPropagator extends MessageToMessageDecoder<TunnelExte
         val tunnelId = tunnelExtendedMsg.tunnelId();
         val requestId = tunnelExtendedMsg.requestId();
 
-        val prevKnownTunnelChannel = tunnelRouter.resolvePrev(tunnelId).orElseThrow(()
+        val prevKnownTunnelChannel = router.routePrev(tunnelId).orElseThrow(()
                 -> new OnionTunnelingException("Cannot propagate ONION_TUNNEL_EXTENDED back, route not found"));
 
         log.debug("[{}][{}] ONION_TUNNEL_EXTENDED is above being propagated BACK to {} by {}, req_id = {}",

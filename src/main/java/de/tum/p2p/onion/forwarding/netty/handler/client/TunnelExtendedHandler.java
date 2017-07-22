@@ -2,7 +2,7 @@ package de.tum.p2p.onion.forwarding.netty.handler.client;
 
 import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
-import de.tum.p2p.onion.forwarding.netty.TunnelRouter;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.onion.forwarding.netty.event.TunnelExtendedReceived;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import io.netty.channel.ChannelHandlerContext;
@@ -28,12 +28,12 @@ public class TunnelExtendedHandler extends MessageToMessageDecoder<TunnelExtende
     private static final Logger log = LoggerFactory.getLogger(TunnelExtendedHandler.class);
 
     private final OnionAuthorizer onionAuth;
-    private final TunnelRouter tunnelRouter;
+    private final Router router;
     private final EventBus eventBus;
 
-    public TunnelExtendedHandler(OnionAuthorizer onionAuth, TunnelRouter tunnelRouter, EventBus eventBus) {
+    public TunnelExtendedHandler(OnionAuthorizer onionAuth, Router router, EventBus eventBus) {
         this.onionAuth = onionAuth;
-        this.tunnelRouter = tunnelRouter;
+        this.router = router;
         this.eventBus = eventBus;
     }
 
@@ -42,7 +42,7 @@ public class TunnelExtendedHandler extends MessageToMessageDecoder<TunnelExtende
         val tunnelId = tunnelExtendedMsg.tunnelId();
         val requestId = tunnelExtendedMsg.requestId();
 
-        if (!tunnelRouter.resolvePrev(tunnelId).isPresent()) {
+        if (!router.hasRoutePrev(tunnelId)) {
             log.debug("[{}][{}] ONION_TUNNEL_EXTENDED request received by {} (from {}), req_id = {}",
                 ctx.channel().localAddress(), tunnelId,
                 ctx.channel().localAddress(), ctx.channel().remoteAddress(),

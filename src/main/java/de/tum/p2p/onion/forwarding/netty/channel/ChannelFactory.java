@@ -2,7 +2,7 @@ package de.tum.p2p.onion.forwarding.netty.channel;
 
 import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
-import de.tum.p2p.onion.forwarding.netty.TunnelRouter;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.onion.forwarding.netty.handler.OnionMessageDecoder;
 import de.tum.p2p.onion.forwarding.netty.handler.OnionMessageEncoder;
 import de.tum.p2p.proto.message.Message;
@@ -40,7 +40,7 @@ abstract class ChannelFactory<T extends Channel> {
     protected byte[] hmacKey;
 
     protected OnionAuthorizer onionAuthorizer;
-    protected TunnelRouter tunnelRouter;
+    protected Router router;
     protected EventBus eventBus;
 
     protected LogLevel loggerLevel;

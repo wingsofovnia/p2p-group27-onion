@@ -8,10 +8,10 @@ import de.tum.p2p.onion.auth.SessionId;
 import de.tum.p2p.onion.forwarding.*;
 import de.tum.p2p.onion.forwarding.netty.channel.ClientChannelFactory;
 import de.tum.p2p.onion.forwarding.netty.channel.ServerChannelFactory;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
+import de.tum.p2p.onion.forwarding.netty.event.TunnelDataReceived;
 import de.tum.p2p.onion.forwarding.netty.event.TunnelExtendedReceived;
-import de.tum.p2p.onion.forwarding.netty.event.TunnelRetireCommand;
-import de.tum.p2p.proto.message.Message;
-import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessageFactory;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelRetireMessage;
 import de.tum.p2p.rps.RandomPeerSampler;
@@ -19,33 +19,30 @@ import io.netty.channel.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.experimental.Accessors;
 import lombok.val;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.security.PublicKey;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static de.tum.p2p.onion.forwarding.netty.context.Route.to;
 import static de.tum.p2p.util.Nets.localhost;
 import static java.util.Arrays.asList;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.Validate.notNull;
 
 /**
  * Netty implementation of the Onion Forwarder who is responsible for
@@ -53,7 +50,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  * <p>
  * Each Netty Onion Forwarder holds a server socket channel and may hold
  * 1 client socket per tunnel that points to next onion's server this onion
- * should forward ONION_TUNNEL_DATUM/ONION_TUNNEL_EXTEND messages:
+ * should route ONION_TUNNEL_DATUM/ONION_TUNNEL_EXTEND messages:
  * <pre>
  *    O(1)                    O(2)
  * |--------|              |--------|
@@ -67,6 +64,9 @@ import static org.apache.commons.lang3.Validate.notNull;
  * <ol>
  *     <li>Can we improve asynchronicity of peer sampling?</li>
  *     <li>Can we build tunnel asynchronously {@link #extendTunnel(TunnelId, Peer)}?</li>
+ *     <li>Decouple message handlers from internal structures (tunnelRouter etc?)</li>
+ *     <li>Message Factory (route rid of hmac  here)/parser</li>
+ *     <li>Update subscripbe (sender? tunnelId? more parameters)</li>
  * </ol>
  */
 public class NettyOnionForwarder implements OnionForwarder {
@@ -78,21 +78,23 @@ public class NettyOnionForwarder implements OnionForwarder {
         InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
     }
 
-    private static final Duration SYNC_CHANNEL_GET_TIMEOUT = Duration.ofSeconds(2);
+    private static final Duration SYNC_CHANNEL_GET_TIMEOUT = Duration.ofDays(2);
 
     private static final Integer MIN_INTERMEDIATE_HOPS_WARN = 3;
     private final Integer intermediateHops;
 
+    private final byte[] hmac;
+
     private final RandomPeerSampler rps;
     private final OnionAuthorizer onionAuthorizer;
 
-    private final List<Tunnel> tunnels = new ArrayList<>();
-    private final TunnelRouter tunnelRouter;
+    private final Router router;
 
     private final Channel serverChannel;
     private final ClientChannelFactory clientChannelFactory;
 
     private final EventBus eventBus;
+    private final List<BiConsumer<TunnelId, ByteBuffer>> dataConsumers = new ArrayList<>();
 
     private final Peer me;
 
@@ -104,9 +106,12 @@ public class NettyOnionForwarder implements OnionForwarder {
 
         this.intermediateHops = builder.intermediateHops;
 
+        this.hmac = builder.hmacKey;
+
         this.rps = builder.randomPeerSampler;
         this.onionAuthorizer = builder.onionAuthorizer;
-        this.tunnelRouter = builder.tunnelRouter;
+
+        this.router = builder.router;
 
         try {
             this.serverChannel = builder.buildServerChannelFactory()
@@ -121,7 +126,7 @@ public class NettyOnionForwarder implements OnionForwarder {
         }
 
         this.eventBus = builder.eventBus;
-        registerStaticEventHandlers(eventBus);
+        attachDataConsumers(eventBus);
 
         this.me = Peer.of(builder.inetAddress, builder.port, builder.publicKey);
     }
@@ -130,7 +135,7 @@ public class NettyOnionForwarder implements OnionForwarder {
     public CompletableFuture<TunnelId> createTunnel(Peer destination) throws OnionTunnelingException {
         val tunnelId = TunnelId.random();
 
-        // Random Intermediate peers (not me/dest)
+        // Random Route peers (not me/dest)
         //             vvvvvvvvvvvvvvvvvvvvvvvvvvvv
         // O(me/orig) ... O(inter1) ... O(interN) ... O(dest)
         val futureTunnelInterHopPeers = rps.sampleDistinctExclusive(intermediateHops, asList(me, destination));
@@ -150,9 +155,9 @@ public class NettyOnionForwarder implements OnionForwarder {
             val tunnelHeadPeer = tunnelPeers.iterator().next();
 
             if (log.isDebugEnabled()) {
-                log.debug("[{}][{}] Next tunnel #{} from = {} with further hops = {}",
+                log.debug("[{}][{}] Next tunnel #{}: {} 0-> {}",
                     me.socketAddress(), tunnelId, tunnelId, me.socketAddress(),
-                    tunnelPeers.stream().map(Peer::socketAddress).map(Object::toString).collect(joining(", ")));
+                    tunnelPeers.stream().map(Peer::socketAddress).map(Object::toString).collect(joining(" -> ")));
             }
 
             // Establish a client connection with the tunnelHeadPeer
@@ -160,9 +165,11 @@ public class NettyOnionForwarder implements OnionForwarder {
 
             // Bore the tunnel
             return futureTunnelHeadChannel.thenApplyAsync(tunnelHeadChannel -> {
-                // Remember connecting to head peer of the tunnel
-                tunnelRouter.routeNext(tunnelId, tunnelHeadChannel);
+                // Remember connection to head peer of the tunnel
+                router.route(to(tunnelId, tunnelHeadChannel));
 
+                // Synchronously extend tunnel peer by peer. Synchronicity is required
+                // in order to ensure natural sessionIds order
                 return tunnelPeers.stream().map(peer -> {
                     try {
                         return extendTunnel(tunnelId, peer)
@@ -175,15 +182,15 @@ public class NettyOnionForwarder implements OnionForwarder {
             });
         });
 
-        val futureTunnel = futureTunnelHopSessionIds.<Tunnel>thenApply(sessionIds -> Tunnel.of(tunnelId, sessionIds));
+        return futureTunnelHopSessionIds.thenApply((sessionIds) -> {
+            log.debug("[{}][{}] Tunnel has been persisted withing the onion",
+                me.socketAddress(), tunnelId);
 
-        return futureTunnel.thenApply(tunnel -> {
-            tunnels.add(tunnel);
+            val route = router.route(tunnelId).orElseThrow(()
+                -> new OnionTunnelingException("Failed to persist tunnel session ids - " + tunnelId + " not found"));
+            route.attachSessionIds(sessionIds);
 
-            log.trace("[{}][{}] Tunnel #{} has been persisted withing the onion",
-                me.socketAddress(), tunnelId, tunnelId);
-
-            return tunnel.id();
+            return tunnelId;
         });
     }
 
@@ -198,7 +205,8 @@ public class NettyOnionForwarder implements OnionForwarder {
                 val tunnelExtendMsg = TunnelExtendMessage.of(tunnelId, newHop.address(), newHop.port(),
                     me.publicKey(), sessionIdHs1Pair.getRight());
 
-                val tunnelHeadChannel = tunnelRouter.getNext(tunnelId);
+                val tunnelHeadChannel = router.routeNext(tunnelId).orElseThrow(()
+                    -> new OnionTunnelingException("Failed to retrieve next hop of the tunnel " + tunnelId));
 
                 eventBus.register(new Consumer<TunnelExtendedReceived>() {
                     @Subscribe
@@ -233,7 +241,7 @@ public class NettyOnionForwarder implements OnionForwarder {
 
     @Override
     public void destroyTunnel(TunnelId tunnelId) throws OnionTunnelingException {
-        tunnelRouter.resolveNext(tunnelId).ifPresent(tunnelNextHop -> {
+        router.routeNext(tunnelId).ifPresent(tunnelNextHop -> {
             val tunnelRetireMsg = TunnelRetireMessage.of(tunnelId);
 
             tunnelNextHop.writeAndFlush(tunnelRetireMsg)
@@ -242,22 +250,27 @@ public class NettyOnionForwarder implements OnionForwarder {
                         throw new OnionTunnelingException("Failed to sent tunnel retire request " +
                             "to next hop", transfer.cause());
 
-                    retireTunnel(tunnelId);
+                    router.forget(tunnelId);
                 });
         });
     }
 
     @Override
-    public void forward(TunnelId tunnelId, Message message) throws OnionDataForwardingException {
-        if (!tunnelRouter.resolveNext(tunnelId).isPresent())
-            throw new OnionTunnelingException("Unknown tunnel id (retired?)");
+    public void forward(TunnelId tunnelId, ByteBuffer data) throws OnionDataForwardingException {
+        val route = router.route(tunnelId).orElseThrow(()
+            -> new OnionTunnelingException("Unknown tunnel " + tunnelId));
 
-        throw new NotImplementedException();
+        val routeNextHop = route.getNext();
+        val routeSessionIds = route.sessionIds();
+
+        TunnelDatumMessageFactory.ofMany(tunnelId, data, (plaintext)
+            -> onionAuthorizer.encrypt(plaintext, routeSessionIds).join().bytesBuffer(), hmac)
+                .forEach(routeNextHop::writeAndFlush);
     }
 
     @Override
     public void cover(int size) throws OnionCoverInterferenceException {
-        if (!tunnels.isEmpty())
+        if (!router.isEmpty())
             throw new OnionCoverInterferenceException("Generation of cover traffic when " +
                 "there are active tunnels is prohibited");
 
@@ -270,8 +283,13 @@ public class NettyOnionForwarder implements OnionForwarder {
     }
 
     @Override
-    public void onDatumArrival(Consumer<DatumOnionMessage> datumOnionMessageConsumer) {
-        throw new NotImplementedException();
+    public void subscribe(BiConsumer<TunnelId, ByteBuffer> consumer) {
+        dataConsumers.add(consumer);
+    }
+
+    @Override
+    public void unsubscribe(BiConsumer<TunnelId, ByteBuffer> consumer) {
+        dataConsumers.remove(consumer);
     }
 
     @Override
@@ -282,7 +300,7 @@ public class NettyOnionForwarder implements OnionForwarder {
     @Override
     public void close() throws IOException {
         try {
-            this.tunnelRouter.close();
+            this.router.close();
 
             this.serverChannel.disconnect();
             this.serverChannel.close().syncUninterruptibly();
@@ -291,16 +309,13 @@ public class NettyOnionForwarder implements OnionForwarder {
         }
     }
 
-    private void retireTunnel(TunnelId tunnelId) {
-        tunnels.removeIf(tunnel -> tunnel.id().equals(tunnelId));
-        tunnelRouter.retire(tunnelId);
-    }
-
-    private void registerStaticEventHandlers(EventBus eventBus) {
-        eventBus.register(new Consumer<TunnelRetireCommand>() {
+    private void attachDataConsumers(EventBus eventBus) {
+        eventBus.register(new Consumer<TunnelDataReceived>() {
             @Subscribe
-            public void accept(TunnelRetireCommand tunnelRetireCmd) {
-                retireTunnel(tunnelRetireCmd.tunnelId());
+            public void accept(TunnelDataReceived tunnelDataReceived) {
+                dataConsumers.forEach(consumer -> {
+                    consumer.accept(tunnelDataReceived.tunnelId(), tunnelDataReceived.payload());
+                });
             }
         });
     }
@@ -325,7 +340,8 @@ public class NettyOnionForwarder implements OnionForwarder {
         private Integer intermediateHops;
         private RandomPeerSampler randomPeerSampler;
         private OnionAuthorizer onionAuthorizer;
-        private TunnelRouter tunnelRouter = new TunnelRouter();
+
+        private Router router = new Router();
 
         private EventBus eventBus = new EventBus();
         private LogLevel loggerLevel;
@@ -400,8 +416,8 @@ public class NettyOnionForwarder implements OnionForwarder {
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder tunnelRouter(TunnelRouter tunnelRouter) {
-            this.tunnelRouter = tunnelRouter;
+        public NettyRemoteOnionForwarderBuilder router(Router router) {
+            this.router = router;
             return this;
         }
 
@@ -433,7 +449,7 @@ public class NettyOnionForwarder implements OnionForwarder {
                 .randomPeerSampler(randomPeerSampler)
                 .clientChannelFactory(buildClientChannelFactory())
                 .onionAuthorizer(onionAuthorizer)
-                .tunnelRouter(tunnelRouter)
+                .router(router)
                 .eventBus(eventBus);
 
             if (nonNull(loggerLevel))
@@ -456,7 +472,7 @@ public class NettyOnionForwarder implements OnionForwarder {
             clientChannelFactoryBuilder
                 .hmacKey(hmacKey)
                 .onionAuthorizer(onionAuthorizer)
-                .tunnelRouter(tunnelRouter)
+                .router(router)
                 .eventBus(eventBus);
 
             if (nonNull(loggerLevel))
@@ -471,28 +487,6 @@ public class NettyOnionForwarder implements OnionForwarder {
 
         public NettyOnionForwarder build() {
             return listen();
-        }
-    }
-
-    /**
-     * Encapsulates information about data Tunnels such as hops
-     * {@link Peer}s and Tunnel identifier
-     */
-    @ToString @EqualsAndHashCode
-    @Getter @Accessors(fluent = true)
-    private static class Tunnel {
-
-        private final TunnelId id;
-
-        private final List<SessionId> sessionIds;
-
-        public Tunnel(TunnelId id, List<SessionId> sessionIds) {
-            this.id = notNull(id);
-            this.sessionIds = new ArrayList<>(sessionIds);
-        }
-
-        public static Tunnel of(TunnelId tunnelId, List<SessionId> sessionIds) {
-            return new Tunnel(tunnelId, sessionIds);
         }
     }
 }

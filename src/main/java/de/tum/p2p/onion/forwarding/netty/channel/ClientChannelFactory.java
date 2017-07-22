@@ -2,7 +2,7 @@ package de.tum.p2p.onion.forwarding.netty.channel;
 
 import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
-import de.tum.p2p.onion.forwarding.netty.TunnelRouter;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.onion.forwarding.netty.handler.client.TunnelExtendedHandler;
 import de.tum.p2p.onion.forwarding.netty.handler.client.TunnelExtendedPropagator;
 import io.netty.bootstrap.Bootstrap;
@@ -49,7 +49,7 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
         this.hmacKey = notNull(builder.hmacKey);
 
         this.onionAuthorizer = notNull(builder.onionAuthorizer);
-        this.tunnelRouter = notNull(builder.tunnelRouter);
+        this.router = notNull(builder.router);
         this.eventBus = notNull(builder.eventBus);
 
         this.loggerLevel = builder.loggerLevel;
@@ -75,8 +75,8 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
 
     private ChannelInitializer clientPipeline() {
         return messagingChannel(pipe -> {
-            pipe.addLast(new TunnelExtendedHandler(onionAuthorizer, tunnelRouter, eventBus));
-            pipe.addLast(new TunnelExtendedPropagator(tunnelRouter));
+            pipe.addLast(new TunnelExtendedHandler(onionAuthorizer, router, eventBus));
+            pipe.addLast(new TunnelExtendedPropagator(router));
         });
     }
 
@@ -96,7 +96,7 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
         private byte[] hmacKey;
 
         private OnionAuthorizer onionAuthorizer;
-        private TunnelRouter tunnelRouter;
+        private Router router;
         private EventBus eventBus;
 
         private LogLevel loggerLevel;
@@ -126,8 +126,8 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
             return this;
         }
 
-        public ClientChannelFactoryBuilder tunnelRouter(TunnelRouter tunnelRouter) {
-            this.tunnelRouter = tunnelRouter;
+        public ClientChannelFactoryBuilder router(Router router) {
+            this.router = router;
             return this;
         }
 

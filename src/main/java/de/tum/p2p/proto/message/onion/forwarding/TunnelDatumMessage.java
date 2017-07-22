@@ -1,5 +1,6 @@
 package de.tum.p2p.proto.message.onion.forwarding;
 
+import de.tum.p2p.onion.forwarding.TunnelId;
 import de.tum.p2p.proto.ProtoException;
 import de.tum.p2p.proto.message.MessageType;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  */
 @Accessors(fluent = true)
 @ToString @EqualsAndHashCode(callSuper = true)
-public class DatumOnionMessage extends OnionMessage {
+public class TunnelDatumMessage extends OnionMessage {
 
     private static final int HMAC_BYTES = 32; // SHA-256
 
@@ -37,14 +38,14 @@ public class DatumOnionMessage extends OnionMessage {
             - HMAC_BYTES;
 
     @Getter
-    private final int tunnelId;
+    private final TunnelId tunnelId;
 
     @Getter
     private final byte[] payload;
 
     private final transient byte[] hmacKey;
 
-    public DatumOnionMessage(int tunnelId, byte[] payload, byte[] hmacKey) {
+    public TunnelDatumMessage(TunnelId tunnelId, byte[] payload, byte[] hmacKey) {
         super(MessageType.ONION_TUNNEL_DATUM, false);
 
         if (payload.length > MAX_PAYLOAD_BYTES)
@@ -56,13 +57,13 @@ public class DatumOnionMessage extends OnionMessage {
         this.payload = payload;
     }
 
-    public static DatumOnionMessage of(int tunnelId, byte[] payload, byte[] hmacKey) {
-        return new DatumOnionMessage(tunnelId, payload, hmacKey);
+    public static TunnelDatumMessage of(TunnelId tunnelId, byte[] payload, byte[] hmacKey) {
+        return new TunnelDatumMessage(tunnelId, payload, hmacKey);
     }
 
     @Override
     protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
-        typedMessageBuffer.putInt(tunnelId);
+        typedMessageBuffer.putInt(tunnelId.raw());
         typedMessageBuffer.putInt(payload.length);
 
         val paddedPayload = randPad(payload, MAX_PAYLOAD_BYTES);
@@ -74,7 +75,7 @@ public class DatumOnionMessage extends OnionMessage {
         return typedMessageBuffer;
     }
 
-    public static DatumOnionMessage fromBytes(byte[] rawTypedMessage, byte[] hmacKey) {
+    public static TunnelDatumMessage fromBytes(byte[] rawTypedMessage, byte[] hmacKey) {
         val rawDatumOnionMessage = untype(rawTypedMessage, MessageType.ONION_TUNNEL_DATUM);
 
         val parsedTunnelId = rawDatumOnionMessage.getInt();
@@ -89,12 +90,16 @@ public class DatumOnionMessage extends OnionMessage {
 
         val checkHmac = hmacSha256(hmacKey, parsedPayload);
         if (!Arrays.equals(checkHmac, parsedHmac))
-            throw new ProtoException("Failed to parse DatumOnionMessage - invalid hmac. \n" +
+            throw new ProtoException("Failed to parse TunnelDatumMessage - invalid hmac. \n" +
                 "Expected / Actual:\n"
                 + Arrays.toString(checkHmac) + "\n"
                 + Arrays.toString(parsedHmac) + "\n"
                 + "For payload: \n" + Arrays.toString(parsedPayload));
 
-        return new DatumOnionMessage(parsedTunnelId, parsedPayload, hmacKey);
+        return new TunnelDatumMessage(TunnelId.wrap(parsedTunnelId), parsedPayload, hmacKey);
+    }
+
+    public TunnelDatumMessage derive(byte[] payload) {
+        return TunnelDatumMessage.of(tunnelId, payload, hmacKey);
     }
 }

@@ -1,7 +1,7 @@
 package de.tum.p2p.onion.forwarding.netty.handler;
 
 import de.tum.p2p.proto.message.TypedMessage;
-import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelRetireMessage;
@@ -41,7 +41,7 @@ public class OnionMessageDecoder extends ByteToMessageDecoder {
                 break;
 
             case ONION_TUNNEL_DATUM:
-                out.add(DatumOnionMessage.fromBytes(inBytes, hmacKey));
+                out.add(TunnelDatumMessage.fromBytes(inBytes, hmacKey));
                 break;
 
             case ONION_TUNNEL_RETIRE:

@@ -1,20 +1,16 @@
 package de.tum.p2p.onion.forwarding.netty;
 
-import de.tum.p2p.onion.auth.OnionAuthorizer;
-import de.tum.p2p.onion.auth.SessionFactory;
-import de.tum.p2p.onion.auth.SessionId;
+import de.tum.p2p.onion.auth.*;
 import de.tum.p2p.onion.forwarding.OnionTunnelingException;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.rps.InMemoryRandomPeerSampler;
 import lombok.val;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.time.Duration;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
+import java.util.concurrent.*;
 
 import static de.tum.p2p.Peers.randLocalPeers;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -32,12 +28,12 @@ public class NettyOnionForwarderTest {
         val rps = new InMemoryRandomPeerSampler(randDistinctPeers);
 
         val peer1 = randDistinctPeers.get(0);
-        val peer1router = new TunnelRouter();
+        val peer1router = new Router();
 
         val peer2 = randDistinctPeers.get(1);
 
         val peer3 = randDistinctPeers.get(2);
-        val peer3router = new TunnelRouter();
+        val peer3router = new Router();
 
         val p1p3sessionId = randSessionId();
         val p1p3hs1 = rand5Bytes();
@@ -51,7 +47,7 @@ public class NettyOnionForwarderTest {
             .randomPeerSampler(rps)
             .hmacKey(hmac)
             .publicKey(peer1.publicKey())
-            .tunnelRouter(peer1router)
+            .router(peer1router)
             //.loggerLevel(LogLevel.DEBUG)
             .intermediateHops(1)
             .listen();
@@ -74,7 +70,7 @@ public class NettyOnionForwarderTest {
             .randomPeerSampler(rps)
             .hmacKey(hmac)
             .publicKey(peer3.publicKey())
-            .tunnelRouter(peer3router)
+            .router(peer3router)
             //.loggerLevel(LogLevel.DEBUG)
             .intermediateHops(1)
             .listen();
@@ -86,8 +82,8 @@ public class NettyOnionForwarderTest {
         verifyAliseOnionMock(p1p3aliseOnionAuth);
         verifyBobOnionMock(p1p3bobOnionAuth);
 
-        assertEquals(peer2.socketAddress(), peer1router.getNext(p1p3TunnelId).remoteAddress());
-        assertFalse(peer1router.resolvePrev(p1p3TunnelId).isPresent());
+        assertEquals(peer2.socketAddress(), peer1router.routeNext(p1p3TunnelId).get().remoteAddress());
+        assertFalse(peer1router.routePrev(p1p3TunnelId).isPresent());
     }
 
     @Test(expected = OnionTunnelingException.class)
@@ -133,11 +129,75 @@ public class NettyOnionForwarderTest {
         val tunnelId = rootPeer.createTunnel(peer3).get(5, TimeUnit.SECONDS);
         assertNotNull(tunnelId);
 
-        Thread.sleep(Duration.ofSeconds(1).toMillis());
         rootPeer.destroyTunnel(tunnelId);
-        Thread.sleep(Duration.ofSeconds(1).toMillis());
 
+        Thread.sleep(500);
         rootPeer.forward(tunnelId, null);
+    }
+
+    @Test
+    public void forwardsDataWithMockedCryptoCorrectly() throws InterruptedException, ExecutionException, TimeoutException {
+        val randDistinctPeers = randLocalPeers(3);
+        val hmac = rand5Bytes();
+
+        val rps = new InMemoryRandomPeerSampler(randDistinctPeers);
+
+        val peer1 = randDistinctPeers.get(0);
+        val peer1oauth = randOnionAuthMock();
+        val peer2 = randDistinctPeers.get(1);
+        val peer2oauth = randOnionAuthMock();
+        val peer3 = randDistinctPeers.get(2);
+        val peer3oauth = randOnionAuthMock();
+
+        val rootPeer = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+            .port(peer1.port())
+            .onionAuthorizer(peer1oauth)
+            .randomPeerSampler(rps)
+            .hmacKey(hmac)
+            .publicKey(peer1.publicKey())
+            .intermediateHops(1)
+            .listen();
+
+        // peer2onion
+        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+            .port(peer2.port())
+            .onionAuthorizer(peer2oauth)
+            .randomPeerSampler(rps)
+            .hmacKey(hmac)
+            .publicKey(peer2.publicKey())
+            .intermediateHops(1)
+            .listen();
+
+        // peer3onion
+        val destPeer = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+            .port(peer3.port())
+            .onionAuthorizer(peer3oauth)
+            .randomPeerSampler(rps)
+            .hmacKey(hmac)
+            .publicKey(peer3.publicKey())
+            .intermediateHops(1)
+            .listen();
+
+        val tunnelIdBuilt = rootPeer.createTunnel(peer3).get(5, TimeUnit.SECONDS);
+
+        val dataToForward = new byte[] {1, 2, 3};
+
+        val lock = new CountDownLatch(1);
+        destPeer.subscribe(((tunnelId, byteBuffer) -> {
+
+            assertEquals(tunnelIdBuilt, tunnelId);
+            assertArrayEquals(dataToForward, byteBuffer.array());
+
+            lock.countDown();
+        }));
+
+        rootPeer.forward(tunnelIdBuilt, ByteBuffer.wrap(dataToForward));
+
+        lock.await(5, TimeUnit.SECONDS);
+
+        verify(peer1oauth, times(1)).encrypt(any(ByteBuffer.class), any(List.class));
+        verify(peer2oauth, times(1)).decrypt(any(byte[].class), any());
+        verify(peer3oauth, times(1)).decrypt(any(byte[].class), any());
     }
 
     private static OnionAuthorizer aliseOnionAuthMock(SessionId id, byte[] hs1) {
@@ -190,6 +250,11 @@ public class NettyOnionForwarderTest {
 
         when(sessionFactory.confirm(any(byte[].class)))
             .thenReturn(completedFuture(randSessionId()));
+
+        when(onionAuth.encrypt(any(ByteBuffer.class), any()))
+            .then(invocation -> completedFuture(Ciphertext.wrap(((ByteBuffer) invocation.getArguments()[0]).array())));
+        when(onionAuth.decrypt(any(byte[].class), any()))
+            .then(invocation -> completedFuture(Deciphertext.ofPlaintext((byte[]) invocation.getArguments()[0])));
 
         return onionAuth;
     }

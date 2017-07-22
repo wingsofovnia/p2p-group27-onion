@@ -1,8 +1,8 @@
 package de.tum.p2p.onion.forwarding.netty.handler.server;
 
 import de.tum.p2p.onion.forwarding.OnionTunnelingException;
-import de.tum.p2p.onion.forwarding.netty.TunnelRouter;
 import de.tum.p2p.onion.forwarding.netty.channel.ClientChannelFactory;
+import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -24,11 +24,11 @@ public class TunnelExtendPropagator extends MessageToMessageDecoder<TunnelExtend
     private static final Logger log = LoggerFactory.getLogger(TunnelExtendPropagator.class);
 
     private final ClientChannelFactory clientChannelFactory;
-    private final TunnelRouter tunnelRouter;
+    private final Router router;
 
-    public TunnelExtendPropagator(ClientChannelFactory clientChannelFactory, TunnelRouter tunnelRouter) {
+    public TunnelExtendPropagator(ClientChannelFactory clientChannelFactory, Router router) {
         this.clientChannelFactory = clientChannelFactory;
-        this.tunnelRouter = tunnelRouter;
+        this.router = router;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class TunnelExtendPropagator extends MessageToMessageDecoder<TunnelExtend
             extendDestination, extendDestination, ctx.channel().localAddress(),
             requestId);
 
-        val nextKnownTunnelChannel = tunnelRouter.resolveNext(tunnelId);
+        val nextKnownTunnelChannel = router.routeNext(tunnelId);
         if (nextKnownTunnelChannel.isPresent()) {
             // There are some peers behind us and before the peer we are requested to extend by
 
@@ -62,14 +62,13 @@ public class TunnelExtendPropagator extends MessageToMessageDecoder<TunnelExtend
 
             futureNextTunnelChannel.thenAccept(nextTunnelChannel -> {
                 nextTunnelChannel.writeAndFlush(tunnelExtendMsg)
-                    .addListener((ChannelFutureListener) op -> {
-                        if (op.isSuccess()) {
-                            tunnelRouter
-                                .routePrev(tunnelId, ctx.channel())
-                                .routeNext(tunnelId, nextTunnelChannel);
-                        } else {
-                            throw new OnionTunnelingException("Failed to extend the tunnel " + tunnelId, op.cause());
-                        }
+                    .addListener((ChannelFutureListener) transfer -> {
+                        if (!transfer.isSuccess())
+                            throw new OnionTunnelingException("Failed to extend the tunnel " + tunnelId, transfer.cause());
+
+                        val tunnelRoute = router.route(tunnelId).orElseThrow(()
+                            -> new OnionTunnelingException("Cant update router after tunnel extension, prev not found"));
+                        tunnelRoute.next(nextTunnelChannel);
                     });
 
                 log.debug("[{}][{}] ONION_TUNNEL_EXTEND({}) has been passed to the destination peer {}, req_id = {}",
