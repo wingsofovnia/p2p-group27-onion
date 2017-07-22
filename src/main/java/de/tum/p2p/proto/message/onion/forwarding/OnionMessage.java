@@ -2,8 +2,6 @@ package de.tum.p2p.proto.message.onion.forwarding;
 
 import de.tum.p2p.proto.message.MessageType;
 import de.tum.p2p.proto.message.TypedMessage;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 import java.nio.ByteBuffer;
 
@@ -15,7 +13,6 @@ import static de.tum.p2p.util.Paddings.randPad;
  *
  * @see TypedMessage
  */
-@Getter @Accessors(fluent = true)
 public abstract class OnionMessage extends TypedMessage {
 
     public static final int BYTES = 1024 - LENGTH_PREFIX_BYTES;

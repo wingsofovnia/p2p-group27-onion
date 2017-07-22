@@ -38,19 +38,19 @@ public interface OnionForwarder extends Closeable {
      * Instructs {@link OnionForwarder} that Tunnel is no longer in use and it can
      * be destroyed.
      *
-     * @param tunnel a data Tunnel to be destroyed
+     * @param tunnelId a data Tunnel to be destroyed
      * @throws OnionTunnelingException in case of unexpected error during Tunnel destroying
      */
-    void destroyTunnel(TunnelId tunnel) throws OnionTunnelingException;
+    void destroyTunnel(TunnelId tunnelId) throws OnionTunnelingException;
 
     /**
      * Forwards data through the data Tunnel given
      *
-     * @param tunnel  a data Tunnel to be used as a data pipe
+     * @param tunnelId  a data Tunnel to be used as a data pipe
      * @param message a msg that should be forwarded
      * @throws OnionDataForwardingException in case of unexpected error during data forwarding
      */
-    void forward(TunnelId tunnel, Message message) throws OnionDataForwardingException;
+    void forward(TunnelId tunnelId, Message message) throws OnionDataForwardingException;
 
     /**
      * Generates cover traffic which is sent to a random destination, used to

@@ -5,6 +5,7 @@ import de.tum.p2p.onion.auth.OnionAuthorizer;
 import de.tum.p2p.onion.forwarding.netty.TunnelRouter;
 import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelExtendHandler;
 import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelExtendPropagator;
+import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelRetireHandler;
 import de.tum.p2p.rps.RandomPeerSampler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -89,6 +90,7 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
 
     private ChannelInitializer serverPipeline() {
         return messagingChannel(pipe -> {
+            pipe.addLast(new TunnelRetireHandler(tunnelRouter, eventBus));
             pipe.addLast(new TunnelExtendHandler(onionAuthorizer));
             pipe.addLast(new TunnelExtendPropagator(clientChannelFactory, tunnelRouter));
         });

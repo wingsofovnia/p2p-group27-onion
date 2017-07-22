@@ -9,14 +9,13 @@ import de.tum.p2p.onion.forwarding.*;
 import de.tum.p2p.onion.forwarding.netty.channel.ClientChannelFactory;
 import de.tum.p2p.onion.forwarding.netty.channel.ServerChannelFactory;
 import de.tum.p2p.onion.forwarding.netty.event.TunnelExtendedReceived;
+import de.tum.p2p.onion.forwarding.netty.event.TunnelRetireCommand;
 import de.tum.p2p.proto.message.Message;
 import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelRetireMessage;
 import de.tum.p2p.rps.RandomPeerSampler;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
+import io.netty.channel.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
@@ -122,6 +121,7 @@ public class NettyOnionForwarder implements OnionForwarder {
         }
 
         this.eventBus = builder.eventBus;
+        registerStaticEventHandlers(eventBus);
 
         this.me = Peer.of(builder.inetAddress, builder.port, builder.publicKey);
     }
@@ -232,17 +232,35 @@ public class NettyOnionForwarder implements OnionForwarder {
     }
 
     @Override
-    public void destroyTunnel(TunnelId tunnel) throws OnionTunnelingException {
-        throw new NotImplementedException();
+    public void destroyTunnel(TunnelId tunnelId) throws OnionTunnelingException {
+        tunnelRouter.resolveNext(tunnelId).ifPresent(tunnelNextHop -> {
+            val tunnelRetireMsg = TunnelRetireMessage.of(tunnelId);
+
+            tunnelNextHop.writeAndFlush(tunnelRetireMsg)
+                .addListener((ChannelFutureListener) transfer -> {
+                    if (!transfer.isSuccess())
+                        throw new OnionTunnelingException("Failed to sent tunnel retire request " +
+                            "to next hop", transfer.cause());
+
+                    retireTunnel(tunnelId);
+                });
+        });
     }
 
     @Override
-    public void forward(TunnelId tunnel, Message message) throws OnionDataForwardingException {
+    public void forward(TunnelId tunnelId, Message message) throws OnionDataForwardingException {
+        if (!tunnelRouter.resolveNext(tunnelId).isPresent())
+            throw new OnionTunnelingException("Unknown tunnel id (retired?)");
+
         throw new NotImplementedException();
     }
 
     @Override
     public void cover(int size) throws OnionCoverInterferenceException {
+        if (!tunnels.isEmpty())
+            throw new OnionCoverInterferenceException("Generation of cover traffic when " +
+                "there are active tunnels is prohibited");
+
         val coverData = new byte[size];
         ThreadLocalRandom.current().nextBytes(coverData);
 
@@ -271,6 +289,20 @@ public class NettyOnionForwarder implements OnionForwarder {
         } catch (Exception e) {
             throw new IOException("Failed to close onion server channel", e);
         }
+    }
+
+    private void retireTunnel(TunnelId tunnelId) {
+        tunnels.removeIf(tunnel -> tunnel.id().equals(tunnelId));
+        tunnelRouter.retire(tunnelId);
+    }
+
+    private void registerStaticEventHandlers(EventBus eventBus) {
+        eventBus.register(new Consumer<TunnelRetireCommand>() {
+            @Subscribe
+            public void accept(TunnelRetireCommand tunnelRetireCmd) {
+                retireTunnel(tunnelRetireCmd.tunnelId());
+            }
+        });
     }
 
     public static class NettyRemoteOnionForwarderBuilder {

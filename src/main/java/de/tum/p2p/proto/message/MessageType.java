@@ -22,6 +22,7 @@ public enum MessageType {
     ONION_TUNNEL_EXTEND(575),
     ONION_TUNNEL_EXTENDED(576),
     ONION_TUNNEL_DATUM(580),
+    ONION_TUNNEL_RETIRE(585),
     ONION_TUNNEL_ERROR(590);
 
     public static final int BYTES = 2;

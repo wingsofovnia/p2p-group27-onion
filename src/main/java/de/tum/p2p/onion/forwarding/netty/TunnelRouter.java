@@ -49,29 +49,30 @@ public class TunnelRouter implements Closeable {
         return resolvePrev(tunnelId).get();
     }
 
-    public void remove(Integer tunnelId) {
+    public void remove(TunnelId tunnelId) {
         tunnelPrevHops.remove(tunnelId);
         tunnelNextHops.remove(tunnelId);
     }
 
+    public void retire(TunnelId tunnelId) {
+        resolvePrev(tunnelId).ifPresent(this::closeChannel);
+        resolveNext(tunnelId).ifPresent(this::closeChannel);
+
+        remove(tunnelId);
+    }
+
     @Override
     public void close() throws IOException {
-        tunnelNextHops.values().forEach(channel -> {
-            try {
-                channel.disconnect();
-                channel.close().syncUninterruptibly();
-            } catch (Exception e) {
-                throw new OnionException("Failed to close tunnel routeNext routes (channels)", e);
-            }
-        });
+        tunnelNextHops.values().forEach(this::closeChannel);
+        tunnelPrevHops.values().forEach(this::closeChannel);
+    }
 
-        tunnelPrevHops.values().forEach(channel -> {
-            try {
-                channel.disconnect();
-                channel.close().syncUninterruptibly();
-            } catch (Exception e) {
-                throw new OnionException("Failed to close tunnel routePrev routes (channels)", e);
-            }
-        });
+    private void closeChannel(Channel channel) {
+        try {
+            channel.disconnect();
+            channel.close().syncUninterruptibly();
+        } catch (Exception e) {
+            throw new OnionException("Failed to close tunnel routeNext routes (channels)", e);
+        }
     }
 }
