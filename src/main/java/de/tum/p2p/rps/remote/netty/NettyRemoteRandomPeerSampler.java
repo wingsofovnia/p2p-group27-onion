@@ -1,6 +1,5 @@
 package de.tum.p2p.rps.remote.netty;
 
-import de.tum.p2p.P2PException;
 import de.tum.p2p.Peer;
 import de.tum.p2p.onion.forwarding.OnionInitializationException;
 import de.tum.p2p.proto.message.Message;
@@ -28,8 +27,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,19 +60,12 @@ public class NettyRemoteRandomPeerSampler implements RandomPeerSampler {
     private final Channel channel;
 
     private final Duration samplingTimeout;
-    private final KeyFactory hostKeyFactory;
 
     private NettyRemoteRandomPeerSampler(Builder builder) {
         this.channel = buildRemoteRpsChannel(builder.inetAddress, builder.port, builder.channel,
             builder.eventLoopExecutors, builder.channelOptions, builder.loggerLevel);
 
         this.samplingTimeout = builder.samplingTimeout;
-
-        try {
-            this.hostKeyFactory = KeyFactory.getInstance(builder.hostKeyAlg);
-        } catch (NoSuchAlgorithmException e) {
-            throw new P2PException("Failed to init remote RPS", e);
-        }
     }
 
     private Channel buildRemoteRpsChannel(InetAddress inetAddress, Integer port,
@@ -106,7 +96,7 @@ public class NettyRemoteRandomPeerSampler implements RandomPeerSampler {
                 pipe.addLast(new SimpleChannelInboundHandler<ByteBuf>() {
                     @Override
                     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
-                        incomingRandPeerMessages.offer(RpsPeerMessage.fromBytes(safeContent(msg), hostKeyFactory));
+                        incomingRandPeerMessages.offer(RpsPeerMessage.fromBytes(safeContent(msg)));
                     }
                 });
 

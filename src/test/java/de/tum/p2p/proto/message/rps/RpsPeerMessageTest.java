@@ -11,7 +11,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static de.tum.p2p.IPs.randIPv4;
 import static de.tum.p2p.IPs.randIPv6;
-import static de.tum.p2p.PublicKeys.testKeyFactory;
 import static de.tum.p2p.PublicKeys.testPublicKey;
 import static org.junit.Assert.assertEquals;
 
@@ -45,12 +44,10 @@ public class RpsPeerMessageTest {
     @Test
     public void convertsToBytesAndBackCorrectly() {
         val disassembledMsg = testRpsPeerMessage.bytes();
-        val parsedDisassembledMsg = RpsPeerMessage.fromBytes(disassembledMsg, testKeyFactory());
+        val parsedDisassembledMsg = RpsPeerMessage.fromBytes(disassembledMsg);
 
         assertEquals(testRpsPeerMessage.port(), parsedDisassembledMsg.port());
         assertEquals(testRpsPeerMessage.inetAddress(), parsedDisassembledMsg.inetAddress());
         assertEquals(testRpsPeerMessage.hostkey(), parsedDisassembledMsg.hostkey());
-        assertEquals(testRpsPeerMessage.isIPv4(), parsedDisassembledMsg.isIPv4());
-        assertEquals(testRpsPeerMessage.isIPv6(), parsedDisassembledMsg.isIPv6());
     }
 }

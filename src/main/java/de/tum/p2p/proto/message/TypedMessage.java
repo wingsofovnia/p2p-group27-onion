@@ -69,12 +69,12 @@ public abstract class TypedMessage implements Message {
             val rawTypedMessage = convertToExactByteArray(enhancedTypedMessageBuffer);
 
             if (rawTypedMessage.length != size())
-                throw new ProtoException("Actual size of disassembled message doesn't match the declared value: "
-                    + "expected = " + size() + ", actual = " + rawTypedMessage.length);
+                throw new ProtoException(format("Actual size of disassembled message doesn't match the declared value. " +
+                    "Expected = %d, actual = %d", size(), rawTypedMessage.length));
 
             return rawTypedMessage;
         } catch (BufferOverflowException | BufferUnderflowException e) {
-            throw new ProtoException("Actual size of disassembled message doesn't match the declared value", e);
+            throw new ProtoException("Actual size of disassembled message exceeded or not reached the declared value", e);
         }
     }
 

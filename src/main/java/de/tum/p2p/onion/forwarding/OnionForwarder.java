@@ -5,6 +5,7 @@ import de.tum.p2p.proto.message.Message;
 import de.tum.p2p.proto.message.onion.forwarding.DatumOnionMessage;
 
 import java.io.Closeable;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -26,13 +27,12 @@ public interface OnionForwarder extends Closeable {
      * </ol>
      *
      * @param destination a {@link Peer} requested Tunnel should ends with
-     * @param hops        minimal amount of hops in a Tunnel
-     * @return a {@link Tunnel} built
+     * @return a future {@link TunnelId} built
      * @throws OnionTunnelingException in case of unexpected error during Tunnel building
      * @see <a href="https://en.wikipedia.org/wiki/Onion_routing">
      * Wikipedia - Onion Routing</a>
      */
-    Tunnel createTunnel(Peer destination, int hops) throws OnionTunnelingException;
+    CompletableFuture<TunnelId> createTunnel(Peer destination) throws OnionTunnelingException;
 
     /**
      * Instructs {@link OnionForwarder} that Tunnel is no longer in use and it can
@@ -41,7 +41,7 @@ public interface OnionForwarder extends Closeable {
      * @param tunnel a data Tunnel to be destroyed
      * @throws OnionTunnelingException in case of unexpected error during Tunnel destroying
      */
-    void destroyTunnel(Tunnel tunnel) throws OnionTunnelingException;
+    void destroyTunnel(TunnelId tunnel) throws OnionTunnelingException;
 
     /**
      * Forwards data through the data Tunnel given
@@ -50,7 +50,7 @@ public interface OnionForwarder extends Closeable {
      * @param message a msg that should be forwarded
      * @throws OnionDataForwardingException in case of unexpected error during data forwarding
      */
-    void forward(Tunnel tunnel, Message message) throws OnionDataForwardingException;
+    void forward(TunnelId tunnel, Message message) throws OnionDataForwardingException;
 
     /**
      * Generates cover traffic which is sent to a random destination, used to
@@ -71,4 +71,10 @@ public interface OnionForwarder extends Closeable {
      * @param datumOnionMessageConsumer listener implementation (lambda)
      */
     void onDatumArrival(final Consumer<DatumOnionMessage> datumOnionMessageConsumer);
+
+    /**
+     * Generates a {@link Peer} info object with peer connection detains and public key
+     * @return a Peer metadata
+     */
+    Peer peer();
 }

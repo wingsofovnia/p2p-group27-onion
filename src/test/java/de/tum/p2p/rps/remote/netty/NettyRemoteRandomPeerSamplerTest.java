@@ -66,10 +66,15 @@ public class NettyRemoteRandomPeerSamplerTest {
 
             try (val rps = remoteRPSbuilder.build()) {
                 val futureRandomSampledPeers = rps.sample(RANDOM_PEERS_AMOUNT);
-                 val randomSampledPeers = futureRandomSampledPeers.get();
 
-                randomSampledPeers.forEach(randPeer
-                    -> assertTrue(RANDOM_PEERS.contains(randPeer)));
+                futureRandomSampledPeers.stream().forEach(futureRandomSampledPeer -> {
+                        try {
+                            assertTrue(RANDOM_PEERS.contains(futureRandomSampledPeer.get()));
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                );
             }
         }
     }

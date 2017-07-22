@@ -1,11 +1,18 @@
 package de.tum.p2p.util;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import lombok.val;
 
 public final class ByteBufs {
 
+    private ByteBufs() {
+        throw new AssertionError("No instance for you");
+    }
+
     public static byte[] safeContent(ByteBuf byteBuf) {
-        return Unpooled.copiedBuffer(byteBuf).array();
+        val buffer = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(buffer);
+
+        return buffer;
     }
 }

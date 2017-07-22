@@ -38,7 +38,7 @@ public final class ByteArrayPaddings {
      */
     public static byte[] pad(byte[] bytes, int length) {
         if (length < bytes.length)
-            throw new IllegalArgumentException("Padded array length cant be < given array");
+            throw new IllegalArgumentException("Given length (" + length + ") is < array itself (" + bytes.length + ")");
 
         if (bytes.length == length)
             return bytes;

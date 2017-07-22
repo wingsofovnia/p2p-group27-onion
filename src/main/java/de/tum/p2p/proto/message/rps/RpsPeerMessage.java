@@ -4,25 +4,23 @@ package de.tum.p2p.proto.message.rps;
 import de.tum.p2p.proto.ProtoException;
 import de.tum.p2p.proto.message.MessageType;
 import de.tum.p2p.proto.message.TypedMessage;
+import de.tum.p2p.util.Nets.IPVersion;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.val;
-import org.apache.commons.lang3.Validate;
 
-import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
+import static de.tum.p2p.util.Keys.parsePublicKey;
+import static de.tum.p2p.util.Nets.guessInetAddressVersion;
+import static de.tum.p2p.util.Nets.validPort;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
@@ -37,18 +35,13 @@ import static org.apache.commons.lang3.Validate.notNull;
 @ToString @EqualsAndHashCode(callSuper = true)
 public class RpsPeerMessage extends TypedMessage {
 
-    private static final byte IPv4 = 0;
-    private static final int IPv4_BYTES = 4;
-
-    private static final byte IPv6 = 1;
-    private static final int IPv6_BYTES = 16;
+    private static final byte IPv4_FLAG_BYTE = 0;
+    private static final byte IPv6_FLAG_BYTE = 1;
 
     @Getter
-    private final short port;
+    private final int port;
 
     private final static byte[] RESERVED = new byte[Short.BYTES - 1]; // 1 byte for the V field (ip version)
-
-    private final byte ipVer;
 
     @Getter
     private final InetAddress inetAddress;
@@ -56,7 +49,7 @@ public class RpsPeerMessage extends TypedMessage {
     @Getter
     private final PublicKey hostkey;
 
-    public RpsPeerMessage(short port, InetAddress inetAddress, PublicKey hostkey) {
+    public RpsPeerMessage(int port, InetAddress inetAddress, PublicKey hostkey) {
         super(MessageType.RPS_PEER,
             Short.BYTES             // port
                 + RESERVED.length       // RESERVED
@@ -64,77 +57,49 @@ public class RpsPeerMessage extends TypedMessage {
                 + sizeOf(inetAddress)   // inetAddress
                 + sizeOf(hostkey));     // hostkey
 
-        Validate.isTrue(port > 0, "Port cant be negative or eq 0");
-
-        this.port = port;
+        this.port = validPort(port);
         this.hostkey = notNull(hostkey);
 
         this.inetAddress = notNull(inetAddress);
-        this.ipVer = (inetAddress instanceof Inet4Address) ? IPv4 : IPv6;
     }
 
-    public static RpsPeerMessage of(short port, InetAddress inetAddress, PublicKey hostkey) {
+    public static RpsPeerMessage of(int port, InetAddress inetAddress, PublicKey hostkey) {
         return new RpsPeerMessage(port, inetAddress, hostkey);
-    }
-
-    public boolean isIPv4() {
-        return ipVer == IPv4;
-    }
-
-    public boolean isIPv6() {
-        return ipVer == IPv6;
     }
 
     @Override
     protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
-        typedMessageBuffer.putShort(port);
-
+        typedMessageBuffer.putShort((short) port);
         for (val resByte : RESERVED) typedMessageBuffer.put(resByte);
 
-        typedMessageBuffer.put(ipVer);
-        for (val ipByte : inetAddress.getAddress()) typedMessageBuffer.put(ipByte);
+        val ipVersion = guessInetAddressVersion(inetAddress);
+        val ipVersionByte = ipVersion == IPVersion.IPv4 ? IPv4_FLAG_BYTE : IPv6_FLAG_BYTE;
+        typedMessageBuffer.put(ipVersionByte);
+        for (val ib : inetAddress.getAddress()) typedMessageBuffer.put(ib);
 
         for (val keyByte : hostkey.getEncoded()) typedMessageBuffer.put(keyByte);
 
         return typedMessageBuffer;
     }
 
-    public static RpsPeerMessage fromBytes(byte[] rawTypedMessage, String keyAlgorithm) {
-        try {
-            return fromBytes(rawTypedMessage, KeyFactory.getInstance(keyAlgorithm));
-        } catch (NoSuchAlgorithmException e) {
-            throw new ProtoException("Failed to factory KeyFactory", e);
-        }
-    }
-
-    public static RpsPeerMessage fromBytes(byte[] rawTypedMessage, KeyFactory keyFactory) {
+    public static RpsPeerMessage fromBytes(byte[] rawTypedMessage) {
         val rawRpsPeerMessage = untype(rawTypedMessage, MessageType.RPS_PEER);
 
-        val parsedPort = rawRpsPeerMessage.getShort();
+        val parsedPort = Short.toUnsignedInt(rawRpsPeerMessage.getShort());
 
         rawRpsPeerMessage.position(rawRpsPeerMessage.position() + RESERVED.length); // skip reserved
 
-        val parsedIpVersion = ensureValidIpVersion(rawRpsPeerMessage.get());
+        val parsedIpVersion = ensureValidIpVersionByte(rawRpsPeerMessage.get());
 
         InetAddress parsedInetAddress;
-        if (parsedIpVersion == IPv4) {
-            val rawParsedInetAddress = new byte[IPv4_BYTES];
+        try {
+            val parsedIpSize = parsedIpVersion == IPv4_FLAG_BYTE ? IPVersion.IPv4.bytes() : IPVersion.IPv6.bytes();
+            val rawParsedInetAddress = new byte[parsedIpSize];
             rawRpsPeerMessage.get(rawParsedInetAddress);
 
-            try {
-                parsedInetAddress = Inet4Address.getByAddress(rawParsedInetAddress);
-            } catch (UnknownHostException e) {
-                throw new ProtoException("Failed to parse IPv4 address", e);
-            }
-        } else {
-            val rawParsedInetAddress = new byte[IPv6_BYTES];
-            rawRpsPeerMessage.get(rawParsedInetAddress);
-
-            try {
-                parsedInetAddress = Inet6Address.getByAddress(rawParsedInetAddress);
-            } catch (UnknownHostException e) {
-                throw new ProtoException("Failed to parse IPv6 address", e);
-            }
+            parsedInetAddress = InetAddress.getByAddress(rawParsedInetAddress);
+        } catch (UnknownHostException e) {
+            throw new ProtoException("Failed to parse IP address", e);
         }
 
         val rawParsedHostKey = new byte[rawRpsPeerMessage.capacity() - rawRpsPeerMessage.position()];
@@ -142,7 +107,7 @@ public class RpsPeerMessage extends TypedMessage {
 
         PublicKey parsedHostKey;
         try {
-            parsedHostKey = keyFactory.generatePublic(new X509EncodedKeySpec(rawParsedHostKey));
+            parsedHostKey = parsePublicKey(rawParsedHostKey);
         } catch (InvalidKeySpecException e) {
             throw new ProtoException("Failed to parse host key: " + Arrays.toString(rawParsedHostKey), e);
         }
@@ -150,12 +115,13 @@ public class RpsPeerMessage extends TypedMessage {
         return new RpsPeerMessage(parsedPort, parsedInetAddress, parsedHostKey);
     }
 
-    private static byte ensureValidIpVersion(byte ipVer) {
-        if (ipVer != IPv4 && ipVer != IPv6)
+    private static byte ensureValidIpVersionByte(byte ipVerByte) {
+        if (ipVerByte != IPv4_FLAG_BYTE && ipVerByte != IPv6_FLAG_BYTE)
             throw new IllegalArgumentException("IpVer is unknown. " +
-                "Actual = " + Byte.toString(ipVer) + ", expected = " + Arrays.toString(new byte[]{IPv4, IPv6}));
+                "Actual = " + Byte.toString(ipVerByte) + ", expected = " +
+                Arrays.toString(new byte[]{IPv4_FLAG_BYTE, IPv6_FLAG_BYTE}));
 
-        return ipVer;
+        return ipVerByte;
     }
 
     private static int sizeOf(InetAddress inetAddress) {

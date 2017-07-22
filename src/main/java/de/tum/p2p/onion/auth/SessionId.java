@@ -2,12 +2,11 @@ package de.tum.p2p.onion.auth;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
-@ToString @EqualsAndHashCode
+@EqualsAndHashCode
 @Getter @Accessors(fluent = true)
 public class SessionId {
 
@@ -19,5 +18,14 @@ public class SessionId {
 
     public static SessionId wrap(Short id) {
         return new SessionId(id);
+    }
+
+    public Short raw() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        return id.toString();
     }
 }

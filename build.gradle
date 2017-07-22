@@ -15,6 +15,9 @@ ext {
         commons: [
             apacheLang3: '3.5',
             apacheCodec: '1.+',
+            guava: '22.0'
+        ],
+        util: [
             ini4j: '0.5.+'
         ],
         net: [
@@ -39,7 +42,10 @@ dependencies {
 
     compile group: 'org.apache.commons', name: 'commons-lang3', version: dependencyVersions.commons.apacheLang3
     compile group: 'commons-codec', name: 'commons-codec', version: dependencyVersions.commons.apacheCodec
-    compile group: 'org.ini4j', name: 'ini4j', version: dependencyVersions.commons.ini4j
+
+    compile group: 'org.ini4j', name: 'ini4j', version: dependencyVersions.util.ini4j
+    compile group: 'com.google.guava', name: 'guava', version: dependencyVersions.commons.guava
+
     compile group: 'io.netty', name: 'netty-all', version: dependencyVersions.net.netty
 
     compile group: 'org.slf4j', name: 'slf4j-api', version: dependencyVersions.log.log4j
@@ -47,7 +53,6 @@ dependencies {
 
     testCompile group: 'junit', name: 'junit', version: dependencyVersions.test.junit
     testCompile group: 'org.mockito', name: 'mockito-all', version: dependencyVersions.test.mockito
-
     testCompile files('lib/voip.jar')
 }
 

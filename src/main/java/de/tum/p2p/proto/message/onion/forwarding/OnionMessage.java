@@ -14,7 +14,7 @@ import lombok.experimental.Accessors;
 @Getter @Accessors(fluent = true)
 public abstract class OnionMessage extends TypedMessage {
 
-    public static final int BYTES = 64 * 1024 - LENGTH_PREFIX_BYTES;
+    public static final int BYTES = 1024 - LENGTH_PREFIX_BYTES;
 
     public OnionMessage(MessageType messageType) {
         super(messageType, BYTES - MessageType.BYTES);

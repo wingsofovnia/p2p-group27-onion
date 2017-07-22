@@ -6,7 +6,6 @@ import lombok.val;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -28,14 +27,6 @@ public final class PublicKeys {
             val keyFactory = KeyFactory.getInstance(HOSTKEY_ALG);
             return keyFactory.generatePublic(new X509EncodedKeySpec(hostkeyBytes));
         } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static KeyFactory testKeyFactory() {
-        try {
-            return KeyFactory.getInstance(HOSTKEY_ALG);
-        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
