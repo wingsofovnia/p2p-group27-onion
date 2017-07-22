@@ -70,14 +70,14 @@ public class RpsPeerMessage extends TypedMessage {
     @Override
     protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
         typedMessageBuffer.putShort((short) port);
-        for (val resByte : RESERVED) typedMessageBuffer.put(resByte);
+        typedMessageBuffer.put(RESERVED);
 
         val ipVersion = guessInetAddressVersion(inetAddress);
         val ipVersionByte = ipVersion == IPVersion.IPv4 ? IPv4_FLAG_BYTE : IPv6_FLAG_BYTE;
         typedMessageBuffer.put(ipVersionByte);
-        for (val ib : inetAddress.getAddress()) typedMessageBuffer.put(ib);
+        typedMessageBuffer.put(inetAddress.getAddress());
 
-        for (val keyByte : hostkey.getEncoded()) typedMessageBuffer.put(keyByte);
+        typedMessageBuffer.put(hostkey.getEncoded());
 
         return typedMessageBuffer;
     }

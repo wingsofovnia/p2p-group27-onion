@@ -10,7 +10,6 @@ import lombok.val;
 
 import java.nio.ByteBuffer;
 
-import static de.tum.p2p.util.ByteArrayPaddings.pad;
 import static de.tum.p2p.util.Handshakes.notOversizedHadshake;
 import static java.lang.Short.toUnsignedInt;
 
@@ -55,9 +54,7 @@ public class TunnelExtendedMessage extends OnionMessage {
         typedMessageBuffer.putInt(requestId);
 
         typedMessageBuffer.putShort((short) handshake.length);
-        val freeSpaceLeft = typedMessageBuffer.capacity() - typedMessageBuffer.position();
-        val paddedHandshake = pad(handshake, freeSpaceLeft);
-        for (val hb : paddedHandshake) typedMessageBuffer.put(hb);
+        typedMessageBuffer.put(handshake);
 
         return typedMessageBuffer;
     }

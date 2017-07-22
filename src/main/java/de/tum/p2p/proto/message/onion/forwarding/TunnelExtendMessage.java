@@ -19,7 +19,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static de.tum.p2p.util.ByteArrayPaddings.pad;
 import static de.tum.p2p.util.Handshakes.notOversizedHadshake;
 import static de.tum.p2p.util.Keys.notOversizedKey;
 import static de.tum.p2p.util.Keys.parsePublicKey;
@@ -93,21 +92,19 @@ public class TunnelExtendMessage extends OnionMessage {
         typedMessageBuffer.putInt(requestId);
 
         typedMessageBuffer.putShort((short) port);
-        for (val rb : RESERVED) typedMessageBuffer.put(rb);
+        typedMessageBuffer.put(RESERVED);
 
         val ipVersion = guessInetAddressVersion(destination);
         val ipVersionByte = (byte) ipVersion.ordinal();
         typedMessageBuffer.put(ipVersionByte);
-        for (val ib : destination.getAddress()) typedMessageBuffer.put(ib);
+        typedMessageBuffer.put(destination.getAddress());
 
         val sourceKeyBytes = sourceKey.getEncoded();
         typedMessageBuffer.putShort((short) sourceKeyBytes.length);
-        for (val kb : sourceKeyBytes) typedMessageBuffer.put(kb);
+        typedMessageBuffer.put(sourceKeyBytes);
 
         typedMessageBuffer.putShort((short) handshake.length);
-        val freeSpaceLeft = typedMessageBuffer.capacity() - typedMessageBuffer.position();
-        val paddedHandshake = pad(handshake, freeSpaceLeft);
-        for (val hb : paddedHandshake) typedMessageBuffer.put(hb);
+        typedMessageBuffer.put(handshake);
 
         return typedMessageBuffer;
     }

@@ -11,7 +11,7 @@ import lombok.val;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import static de.tum.p2p.util.ByteArrayPaddings.pad;
+import static de.tum.p2p.util.Paddings.randPad;
 import static org.apache.commons.codec.digest.HmacUtils.hmacSha256;
 import static org.apache.commons.lang3.Validate.notNull;
 
@@ -45,7 +45,7 @@ public class DatumOnionMessage extends OnionMessage {
     private final transient byte[] hmacKey;
 
     public DatumOnionMessage(int tunnelId, byte[] payload, byte[] hmacKey) {
-        super(MessageType.ONION_TUNNEL_DATUM);
+        super(MessageType.ONION_TUNNEL_DATUM, false);
 
         if (payload.length > MAX_PAYLOAD_BYTES)
             throw new IllegalArgumentException("Payload is too long! Max expected = " + MAX_PAYLOAD_BYTES
@@ -65,13 +65,11 @@ public class DatumOnionMessage extends OnionMessage {
         typedMessageBuffer.putInt(tunnelId);
         typedMessageBuffer.putInt(payload.length);
 
-        val paddedPayload = pad(payload, MAX_PAYLOAD_BYTES);
-        for (val payloadByte : paddedPayload)
-            typedMessageBuffer.put(payloadByte);
+        val paddedPayload = randPad(payload, MAX_PAYLOAD_BYTES);
+        typedMessageBuffer.put(paddedPayload);
 
         val payloadHmac = hmacSha256(hmacKey, payload);
-        for (val hmacByte : payloadHmac)
-            typedMessageBuffer.put(hmacByte);
+        typedMessageBuffer.put(payloadHmac);
 
         return typedMessageBuffer;
     }
