@@ -1,4 +1,4 @@
-package de.tum.p2p.util;
+package de.tum.p2p.util.netty;
 
 import io.netty.buffer.ByteBuf;
 import lombok.val;

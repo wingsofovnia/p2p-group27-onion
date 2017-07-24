@@ -1,4 +1,4 @@
-package de.tum.p2p.onion.forwarding.netty.handler;
+package de.tum.p2p.onion.common.netty.handler;
 
 import de.tum.p2p.proto.message.onion.forwarding.OnionMessage;
 import io.netty.buffer.Unpooled;

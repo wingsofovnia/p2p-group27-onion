@@ -1,4 +1,4 @@
-package de.tum.p2p.onion.forwarding.netty.handler;
+package de.tum.p2p.onion.common.netty.handler;
 
 import de.tum.p2p.proto.message.TypedMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage;
@@ -13,7 +13,8 @@ import lombok.val;
 
 import java.util.List;
 
-import static de.tum.p2p.util.ByteBufs.safeContent;
+import static de.tum.p2p.util.netty.ByteBufs.safeContent;
+import static org.apache.commons.lang3.Validate.notNull;
 
 /**
  * {@code OnionMessageDecoder} decodes ONION_TUNNEL_* messages
@@ -24,7 +25,7 @@ public class OnionMessageDecoder extends ByteToMessageDecoder {
     private final byte[] hmacKey;
 
     public OnionMessageDecoder(byte[] hmacKey) {
-        this.hmacKey = hmacKey;
+        this.hmacKey = notNull(hmacKey);
     }
 
     @Override

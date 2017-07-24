@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import static de.tum.p2p.util.ByteBufs.safeContent;
+import static de.tum.p2p.util.netty.ByteBufs.safeContent;
 
 /**
  * The {@code NettyRemoteRandomPeerSampler} implementation acts like a

@@ -2,6 +2,7 @@ package de.tum.p2p.onion.forwarding.netty.channel;
 
 import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
+import de.tum.p2p.onion.common.netty.OnionPipelineBuilder;
 import de.tum.p2p.onion.forwarding.netty.context.Router;
 import de.tum.p2p.onion.forwarding.netty.handler.client.TunnelExtendedHandler;
 import de.tum.p2p.onion.forwarding.netty.handler.client.TunnelExtendedPropagator;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import static de.tum.p2p.util.netty.Channels.toCompletableFuture;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
@@ -33,15 +35,27 @@ import static org.apache.commons.lang3.Validate.notNull;
  *     <li>{@link io.netty.handler.codec.LengthFieldPrepender}</li>
  *     <li>{@link io.netty.handler.codec.FixedLengthFrameDecoder} to discard
  *     missized frames</li>
- *     <li>{@link de.tum.p2p.onion.forwarding.netty.handler.OnionMessageDecoder}
- *     and {@link de.tum.p2p.onion.forwarding.netty.handler.OnionMessageEncoder}</li>
+ *     <li>{@link de.tum.p2p.onion.common.netty.handler.OnionMessageDecoder}
+ *     and {@link de.tum.p2p.onion.common.netty.handler.OnionMessageEncoder}</li>
  *     <li>{@link TunnelExtendedHandler}</li>
  *     <li>{@link TunnelExtendedPropagator}</li>
  * </ul>
  */
-public class ClientChannelFactory extends ChannelFactory<Channel> {
+public class ClientChannelFactory {
 
-    protected ClientChannelFactory(ClientChannelFactoryBuilder builder) {
+    private final EventLoopGroup bossEventLoop;
+    private final Class<? extends Channel> channel;
+    private final Map<ChannelOption, Object> channelOptions;
+
+    private final byte[] hmacKey;
+
+    private final OnionAuthorizer onionAuthorizer;
+    private final Router router;
+    private final EventBus eventBus;
+
+    private final LogLevel loggerLevel;
+
+    private ClientChannelFactory(ClientChannelFactoryBuilder builder) {
         this.bossEventLoop = notNull(builder.bossEventLoop);
         this.channel = notNull(builder.channel);
         this.channelOptions = notNull(builder.channelOptions);
@@ -74,10 +88,11 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
     }
 
     private ChannelInitializer clientPipeline() {
-        return messagingChannel(pipe -> {
-            pipe.addLast(new TunnelExtendedHandler(onionAuthorizer, router, eventBus));
-            pipe.addLast(new TunnelExtendedPropagator(router));
-        });
+        return new OnionPipelineBuilder()
+            .hmacKey(hmacKey)
+            .handler(new TunnelExtendedHandler(onionAuthorizer, router, eventBus))
+            .handler(new TunnelExtendedPropagator(router))
+            .build();
     }
 
     public static final class ClientChannelFactoryBuilder {
