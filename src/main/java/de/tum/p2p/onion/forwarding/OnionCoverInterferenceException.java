@@ -5,6 +5,8 @@ import de.tum.p2p.onion.OnionException;
 /**
  * Thrown to indicate that {@link OnionForwarder} tried to fabricate
  * cover traffic while holding real data Tunnel connection
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public class OnionCoverInterferenceException extends OnionException {
 

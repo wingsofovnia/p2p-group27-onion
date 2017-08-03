@@ -14,6 +14,13 @@ import java.util.stream.IntStream;
 
 import static de.tum.p2p.util.TypeLimits.USHRT_MAX;
 
+/**
+ * {@code Nets} contains useful utility methods for validating
+ * network related stuff, generating random ports and ip version
+ * detection.
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 public final class Nets {
 
     private static final int UNPRIVILEGED_PORT_LIMIT = 1024;

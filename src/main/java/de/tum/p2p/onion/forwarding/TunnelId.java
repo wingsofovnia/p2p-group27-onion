@@ -1,16 +1,21 @@
 package de.tum.p2p.onion.forwarding;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+/**
+ * {@code TunnelId} encapsulates an id that is used to identify a tunnel
+ * withing an onion
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 @EqualsAndHashCode
-@Getter @Accessors(fluent = true)
 public class TunnelId {
+
+    public static final int BYTES = Integer.BYTES;
 
     private final Integer id;
 

@@ -2,13 +2,9 @@ package de.tum.p2p.onion.forwarding.netty.channel;
 
 import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
-import de.tum.p2p.onion.common.netty.OnionPipelineBuilder;
-import de.tum.p2p.onion.forwarding.netty.context.Router;
-import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelDatumHandler;
-import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelExtendHandler;
-import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelExtendPropagator;
-import de.tum.p2p.onion.forwarding.netty.handler.server.TunnelRetireHandler;
-import de.tum.p2p.rps.RandomPeerSampler;
+import de.tum.p2p.onion.forwarding.netty.context.OriginatorContext;
+import de.tum.p2p.onion.forwarding.netty.context.RoutingContext;
+import de.tum.p2p.onion.forwarding.netty.handler.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -23,7 +19,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static de.tum.p2p.util.Nets.localhost;
-import static de.tum.p2p.util.netty.Channels.toCompletableFuture;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
@@ -33,33 +28,24 @@ import static org.apache.commons.lang3.Validate.notNull;
  * <p>
  * The {@code ServerChannelFactory}'s pipeline includes:
  * <ul>
- *     <li>{@link io.netty.handler.codec.LengthFieldBasedFrameDecoder}</li>
- *     <li>{@link io.netty.handler.codec.LengthFieldPrepender}</li>
+ *     <li>{@link TunnelDatumEncryptedHandler}</li>
+ *     <li>{@link TunnelExtendHandler}</li>
+ *     <li>{@link TunnelRetireHandler}</li>
+ *     <li>{@link TunnelConnectHandler}</li>
+ *     <li>{@link TunnelDatumHandler}</li>
  *     <li>{@link io.netty.handler.codec.FixedLengthFrameDecoder} to discard
  *     missized frames</li>
- *     <li>{@link de.tum.p2p.onion.common.netty.handler.OnionMessageDecoder}
- *     and {@link de.tum.p2p.onion.common.netty.handler.OnionMessageEncoder}</li>
- *     <li>{@link TunnelExtendHandler}</li>
- *     <li>{@link TunnelExtendPropagator}</li>
+ *     <li>{@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageDecoder}
+ *     and {@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageEncoder}</li>
  * </ul>
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
-public class ServerChannelFactory {
+public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
 
-    private final EventLoopGroup bossEventLoop;
     private final EventLoopGroup workerEventLoop;
-    private final Class<? extends ServerChannel> channel;
-    private final Map<ChannelOption, Object> channelOptions;
 
-    private byte[] hmacKey;
-
-    private final OnionAuthorizer onionAuthorizer;
-    private final RandomPeerSampler randomPeerSampler;
     private final ClientChannelFactory clientChannelFactory;
-
-    private final Router router;
-    private final EventBus eventBus;
-
-    private final LogLevel loggerLevel;
 
     protected ServerChannelFactory(ServerChannelFactoryBuilder builder) {
         this.bossEventLoop = notNull(builder.bossEventLoop);
@@ -68,12 +54,9 @@ public class ServerChannelFactory {
         this.channel = notNull(builder.channel);
         this.channelOptions = notNull(builder.channelOptions);
 
-        this.hmacKey = notNull(builder.hmacKey);
-
-        this.randomPeerSampler = notNull(builder.randomPeerSampler);
         this.onionAuthorizer = notNull(builder.onionAuthorizer);
         this.clientChannelFactory = notNull(builder.clientChannelFactory);
-        this.router = notNull(builder.router);
+        this.routingContext = notNull(builder.routingContext);
 
         this.eventBus = notNull(builder.eventBus);
 
@@ -103,14 +86,13 @@ public class ServerChannelFactory {
     }
 
     private ChannelInitializer serverPipeline() {
-        return new OnionPipelineBuilder()
-            .hmacKey(hmacKey)
-            .handler(new TunnelDatumHandler(onionAuthorizer, router, eventBus))
-            .handler(new TunnelRetireHandler(router))
-            .handler(new TunnelExtendHandler(onionAuthorizer, router))
-            .handler(new TunnelExtendPropagator(clientChannelFactory, router))
-            .build();
-
+        return messagingChannel(pipe -> {
+            pipe.addLast(new TunnelDatumEncryptedHandler(onionAuthorizer, routingContext));
+            pipe.addLast(new TunnelExtendHandler(routingContext, onionAuthorizer));
+            pipe.addLast(new TunnelRetireHandler(routingContext));
+            pipe.addLast(new TunnelConnectHandler(routingContext, onionAuthorizer, clientChannelFactory));
+            pipe.addLast(new TunnelDatumHandler(eventBus));
+        });
     }
 
     public static final class ServerChannelFactoryBuilder {
@@ -128,13 +110,11 @@ public class ServerChannelFactory {
         private Class<? extends ServerChannel> channel = DEFAULT_CHANNEL;
         private Map<ChannelOption, Object> channelOptions = DEFAULT_CHANNEL_OPTS;
 
-        private byte[] hmacKey;
-
-        private RandomPeerSampler randomPeerSampler;
         private ClientChannelFactory clientChannelFactory;
 
         private OnionAuthorizer onionAuthorizer;
-        private Router router;
+        private RoutingContext routingContext;
+        public OriginatorContext originatorContext;
 
         private EventBus eventBus;
 
@@ -160,16 +140,6 @@ public class ServerChannelFactory {
             return this;
         }
 
-        public ServerChannelFactoryBuilder hmacKey(byte[] hmacKey) {
-            this.hmacKey = hmacKey;
-            return this;
-        }
-
-        public ServerChannelFactoryBuilder randomPeerSampler(RandomPeerSampler randomPeerSampler) {
-            this.randomPeerSampler = randomPeerSampler;
-            return this;
-        }
-
         public ServerChannelFactoryBuilder clientChannelFactory(ClientChannelFactory clientChannelFactory) {
             this.clientChannelFactory = clientChannelFactory;
             return this;
@@ -180,8 +150,13 @@ public class ServerChannelFactory {
             return this;
         }
 
-        public ServerChannelFactoryBuilder router(Router router) {
-            this.router = router;
+        public ServerChannelFactoryBuilder routingContext(RoutingContext routingContext) {
+            this.routingContext = routingContext;
+            return this;
+        }
+
+        public ServerChannelFactoryBuilder originatorContext(OriginatorContext originatorContext) {
+            this.originatorContext = originatorContext;
             return this;
         }
 

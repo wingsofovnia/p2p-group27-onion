@@ -16,6 +16,8 @@ import static org.apache.commons.lang3.Validate.notNull;
 /**
  * Encapsulates information about peer in the network such
  * as address and public key.
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)

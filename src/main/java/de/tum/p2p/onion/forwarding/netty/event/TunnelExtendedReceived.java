@@ -2,6 +2,8 @@ package de.tum.p2p.onion.forwarding.netty.event;
 
 import de.tum.p2p.onion.auth.SessionId;
 import de.tum.p2p.onion.forwarding.TunnelId;
+import de.tum.p2p.proto.message.onion.forwarding.RequestId;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -10,9 +12,16 @@ import lombok.experimental.Accessors;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
- * This event is issued to {@link com.google.common.eventbus.EventBus} by
- * {@link de.tum.p2p.onion.forwarding.netty.handler.client.TunnelExtendedHandler}
- * so {@link de.tum.p2p.onion.forwarding.OnionForwarder} can react accordingly.
+ * The {@code TunnelExtendedReceived} is issued by {@code TunnelExtendedHandler}
+ * on receiving {@code TunnelExtendedMessage} so that {@code OnionForwarder} can
+ * disconnect tunnel and cleanup.
+ *
+ * @see com.google.common.eventbus.EventBus
+ * @see de.tum.p2p.onion.forwarding.netty.OnionEventBus
+ * @see de.tum.p2p.onion.forwarding.netty.handler.TunnelExtendedHandler
+ * @see TunnelExtendedMessage
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)
@@ -22,15 +31,15 @@ public class TunnelExtendedReceived {
 
     private final SessionId sessionId;
 
-    private final Integer requestId;
+    private final RequestId requestId;
 
-    public TunnelExtendedReceived(TunnelId tunnelId, SessionId sessionId, Integer requestId) {
+    public TunnelExtendedReceived(TunnelId tunnelId, SessionId sessionId, RequestId requestId) {
         this.tunnelId = notNull(tunnelId);
         this.sessionId = notNull(sessionId);
         this.requestId = notNull(requestId);
     }
 
-    public static TunnelExtendedReceived of(TunnelId tunnelId, SessionId sessionId, Integer requestId) {
+    public static TunnelExtendedReceived of(TunnelId tunnelId, SessionId sessionId, RequestId requestId) {
         return new TunnelExtendedReceived(tunnelId, sessionId, requestId);
     }
 }

@@ -2,10 +2,9 @@ package de.tum.p2p.onion.forwarding.netty.channel;
 
 import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
-import de.tum.p2p.onion.common.netty.OnionPipelineBuilder;
-import de.tum.p2p.onion.forwarding.netty.context.Router;
-import de.tum.p2p.onion.forwarding.netty.handler.client.TunnelExtendedHandler;
-import de.tum.p2p.onion.forwarding.netty.handler.client.TunnelExtendedPropagator;
+import de.tum.p2p.onion.forwarding.netty.context.OriginatorContext;
+import de.tum.p2p.onion.forwarding.netty.context.RoutingContext;
+import de.tum.p2p.onion.forwarding.netty.handler.TunnelExtendedHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -22,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import static de.tum.p2p.util.netty.Channels.toCompletableFuture;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
@@ -31,39 +29,25 @@ import static org.apache.commons.lang3.Validate.notNull;
  * <p>
  * The {@code ClientChannelFactory}'s pipeline includes:
  * <ul>
- *     <li>{@link io.netty.handler.codec.LengthFieldBasedFrameDecoder}</li>
- *     <li>{@link io.netty.handler.codec.LengthFieldPrepender}</li>
+ *     <li>{@link TunnelExtendedHandler}</li>
  *     <li>{@link io.netty.handler.codec.FixedLengthFrameDecoder} to discard
  *     missized frames</li>
- *     <li>{@link de.tum.p2p.onion.common.netty.handler.OnionMessageDecoder}
- *     and {@link de.tum.p2p.onion.common.netty.handler.OnionMessageEncoder}</li>
- *     <li>{@link TunnelExtendedHandler}</li>
- *     <li>{@link TunnelExtendedPropagator}</li>
+ *     <li>{@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageDecoder}
+ *     and {@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageEncoder}</li>
  * </ul>
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
-public class ClientChannelFactory {
+public class ClientChannelFactory extends ChannelFactory<Channel> {
 
-    private final EventLoopGroup bossEventLoop;
-    private final Class<? extends Channel> channel;
-    private final Map<ChannelOption, Object> channelOptions;
-
-    private final byte[] hmacKey;
-
-    private final OnionAuthorizer onionAuthorizer;
-    private final Router router;
-    private final EventBus eventBus;
-
-    private final LogLevel loggerLevel;
-
-    private ClientChannelFactory(ClientChannelFactoryBuilder builder) {
+    protected ClientChannelFactory(ClientChannelFactoryBuilder builder) {
         this.bossEventLoop = notNull(builder.bossEventLoop);
         this.channel = notNull(builder.channel);
         this.channelOptions = notNull(builder.channelOptions);
 
-        this.hmacKey = notNull(builder.hmacKey);
-
         this.onionAuthorizer = notNull(builder.onionAuthorizer);
-        this.router = notNull(builder.router);
+        this.routingContext = notNull(builder.routingContext);
+        this.originatorContext = notNull(builder.originatorContext);
         this.eventBus = notNull(builder.eventBus);
 
         this.loggerLevel = builder.loggerLevel;
@@ -88,11 +72,9 @@ public class ClientChannelFactory {
     }
 
     private ChannelInitializer clientPipeline() {
-        return new OnionPipelineBuilder()
-            .hmacKey(hmacKey)
-            .handler(new TunnelExtendedHandler(onionAuthorizer, router, eventBus))
-            .handler(new TunnelExtendedPropagator(router))
-            .build();
+        return messagingChannel(pipe -> {
+            pipe.addLast(new TunnelExtendedHandler(onionAuthorizer, routingContext, eventBus));
+        });
     }
 
     public static final class ClientChannelFactoryBuilder {
@@ -111,7 +93,8 @@ public class ClientChannelFactory {
         private byte[] hmacKey;
 
         private OnionAuthorizer onionAuthorizer;
-        private Router router;
+        private RoutingContext routingContext;
+        public OriginatorContext originatorContext;
         private EventBus eventBus;
 
         private LogLevel loggerLevel;
@@ -131,18 +114,18 @@ public class ClientChannelFactory {
             return this;
         }
 
-        public ClientChannelFactoryBuilder hmacKey(byte[] hmacKey) {
-            this.hmacKey = hmacKey;
-            return this;
-        }
-
         public ClientChannelFactoryBuilder onionAuthorizer(OnionAuthorizer onionAuthorizer) {
             this.onionAuthorizer = onionAuthorizer;
             return this;
         }
 
-        public ClientChannelFactoryBuilder router(Router router) {
-            this.router = router;
+        public ClientChannelFactoryBuilder routingContext(RoutingContext routingContext) {
+            this.routingContext = routingContext;
+            return this;
+        }
+
+        public ClientChannelFactoryBuilder originatorContext(OriginatorContext originatorContext) {
+            this.originatorContext = originatorContext;
             return this;
         }
 

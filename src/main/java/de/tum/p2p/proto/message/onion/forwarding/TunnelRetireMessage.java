@@ -3,37 +3,48 @@ package de.tum.p2p.proto.message.onion.forwarding;
 import de.tum.p2p.onion.forwarding.TunnelId;
 import de.tum.p2p.proto.message.MessageType;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.experimental.Accessors;
 import lombok.val;
 
 import java.nio.ByteBuffer;
 
-@Getter @Accessors(fluent = true)
-@ToString @EqualsAndHashCode(callSuper = true)
-public class TunnelRetireMessage extends OnionMessage {
-
-    private final TunnelId tunnelId;
+/**
+ * {@code TunnelRetireMessage} used to notify the tunnel peers that the tunnel
+ * was retired therefore they can clean their resources and routing tables.
+ * <p>
+ * Packet structure:
+ * <pre>
+ * |-------------|-------------|
+ * |     LP*     |    RETIRE   |
+ * |---------------------------|
+ * |         TUNNEL ID         |
+ * |---------------------------|
+ * </pre>
+ * *LP - Frame Length Prefixing is a Netty's responsibility and is not included
+ * in the message class itself
+ *
+ * @see TunnelMessage
+ * @see MessageType
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
+@EqualsAndHashCode(callSuper = true)
+public class TunnelRetireMessage extends TypedTunnelMessage {
 
     public TunnelRetireMessage(TunnelId tunnelId) {
-        super(MessageType.ONION_TUNNEL_RETIRE);
-        this.tunnelId = tunnelId;
-    }
-
-    public static TunnelRetireMessage of(TunnelId tunnelId) {
-        return new TunnelRetireMessage(tunnelId);
+        super(tunnelId, MessageType.ONION_TUNNEL_RETIRE);
     }
 
     @Override
-    protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
-        return typedMessageBuffer.putInt(tunnelId.raw());
+    protected ByteBuffer writeMessage(ByteBuffer messageBuffer) {
+        return messageBuffer;
     }
 
-    public static TunnelRetireMessage fromBytes(byte[] rawTypedMessage) {
-        val rawTunnelRetireMessage = untype(rawTypedMessage, MessageType.ONION_TUNNEL_RETIRE);
-        val tunnelId = rawTunnelRetireMessage.getInt();
+    public static TunnelRetireMessage fromBytes(byte[] bytes) {
+        val bytesBuffer = ByteBuffer.wrap(bytes);
+        val rawTypedTunnelMessage = TypedTunnelMessage.fromBytes(bytesBuffer, MessageType.ONION_TUNNEL_RETIRE);
 
-        return new TunnelRetireMessage(TunnelId.wrap(tunnelId));
+        val parsedTunnelId = rawTypedTunnelMessage.tunnelId();
+
+        return new TunnelRetireMessage(parsedTunnelId);
     }
 }

@@ -11,13 +11,15 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import static de.tum.p2p.util.ByteBuffers.bufferConsumedBytes;
 import static java.lang.String.format;
-import static java.util.Arrays.copyOfRange;
 
 /**
  * Represents a {@link Message} implementation that reserves first
  * {@link MessageType#BYTES} bytes to describe Message's Type, defined
  * by {@link MessageType}.
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 @ToString
 @EqualsAndHashCode
@@ -66,7 +68,7 @@ public abstract class TypedMessage implements Message {
             val disassembledTypedMessageBuffer = writeMessage(typedMessageBuffer);
             val enhancedTypedMessageBuffer = enhanceMessage(disassembledTypedMessageBuffer);
 
-            val rawTypedMessage = convertToExactByteArray(enhancedTypedMessageBuffer);
+            val rawTypedMessage = bufferConsumedBytes(enhancedTypedMessageBuffer);
 
             if (rawTypedMessage.length != size())
                 throw new ProtoException(format("Actual size of disassembled message doesn't match the declared value. " +
@@ -112,10 +114,5 @@ public abstract class TypedMessage implements Message {
                     "Expected %s, given %s (%s)", type.name(), rawTypedMessageType.name(), rawTypedMessageTypeCode));
 
         return rawTypedMessageBuffer.slice();
-    }
-
-    private static byte[] convertToExactByteArray(ByteBuffer byteBuffer) {
-        val fullSizedArray = byteBuffer.array();
-        return copyOfRange(fullSizedArray, 0, byteBuffer.position());
     }
 }

@@ -25,12 +25,12 @@ public class TunnelExtendedMessageTest {
         val random = ThreadLocalRandom.current();
         for (int i = 0; i < TEST_RUNS; i++) {
             val randomTunnelId = TunnelId.wrap(random.nextInt());
-            val randomRequestId = random.nextInt();
+            val randomRequestId = RequestId.wrap(random.nextInt(Short.MAX_VALUE));
 
-            val randomHandshake = new byte[random.nextInt(Byte.MAX_VALUE, OnionMessage.BYTES / 2)];
+            val randomHandshake = new byte[random.nextInt(Byte.MAX_VALUE, TypedTunnelMessage.PAYLOAD_BYTES / 2)];
             random.nextBytes(randomHandshake);
 
-            data.add(TunnelExtendedMessage.of(randomTunnelId, randomRequestId, randomHandshake));
+            data.add(new TunnelExtendedMessage(randomTunnelId, randomRequestId, randomHandshake));
         }
 
         return data;

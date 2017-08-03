@@ -10,6 +10,8 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * An in memory implementation of {@link RandomPeerSampler}
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public class InMemoryRandomPeerSampler implements RandomPeerSampler {
 

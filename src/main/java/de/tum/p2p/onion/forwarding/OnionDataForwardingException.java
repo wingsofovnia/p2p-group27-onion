@@ -5,6 +5,8 @@ import de.tum.p2p.onion.OnionException;
 /**
  * Thrown to indicate that {@link OnionForwarder} came across
  * error during data forwarding through a data Tunnel
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public class OnionDataForwardingException extends OnionException {
 

@@ -27,9 +27,9 @@ public class PaddingsTest {
         assertEquals(occupancy, byteBuff.position());
 
         val paddingLimit = occupancy + occupancy / 2;
-        pad(byteBuff, paddingLimit);
+        val paddedByteBuff = pad(byteBuff, paddingLimit);
 
-        assertEquals(paddingLimit, byteBuff.position());
+        assertEquals(paddingLimit, paddedByteBuff.position());
     }
 
     @Test
@@ -45,13 +45,13 @@ public class PaddingsTest {
         assertEquals(1, byteBuff.get(occupancyIndex));
 
         val paddingLimit = occupancy + occupancy / 2;
-        randPad(byteBuff, paddingLimit);
+        val paddedByteBuff = randPad(byteBuff, paddingLimit);
 
-        assertEquals(paddingLimit, byteBuff.position());
+        assertEquals(paddingLimit, paddedByteBuff.position());
 
         // Boundaries
-        assertEquals(1, byteBuff.get(occupancyIndex));
-        assertNotEquals(1, byteBuff.get(occupancyIndex + 1));
-        assertNotEquals(1, byteBuff.get(paddingLimit));
+        assertEquals(1, paddedByteBuff.get(occupancyIndex));
+        assertNotEquals(1, paddedByteBuff.get(occupancyIndex + 1));
+        assertNotEquals(1, paddedByteBuff.get(paddingLimit));
     }
 }

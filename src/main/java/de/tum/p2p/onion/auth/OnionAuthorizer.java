@@ -1,10 +1,11 @@
 package de.tum.p2p.onion.auth;
 
-import lombok.val;
-
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.ArrayUtils.addAll;
 
 /**
  * {@code OnionAuthorizer} encapsulates authentication and encryption
@@ -14,6 +15,8 @@ import java.util.concurrent.CompletableFuture;
  *
  * @see <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange">
  * Wikipedia - Diffie–Hellman key exchange</a>
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public interface OnionAuthorizer {
 
@@ -30,33 +33,20 @@ public interface OnionAuthorizer {
      * Encapsulates plaintext in layers of encryption, analogous to layers of an onion.
      *
      * @param plaintext a plaintext to encrypt
-     * @param sessionId {@link SessionId}s used for encryption
-     * @param sessions  additional {@link SessionId}s used for layered encryption
+     * @param sessions  {@link SessionId}s used for encryption
      * @return a ciphertext
      * @throws OnionEncryptionException in case of problems during data encryption
      */
-    CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, SessionId sessionId, SessionId... sessions)
-            throws OnionEncryptionException;
+    CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, List<SessionId> sessions) throws OnionEncryptionException;
 
-    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, SessionId sessionId, SessionId... sessions)
+    default CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, SessionId sessionId, SessionId... sessions)
             throws OnionEncryptionException {
-
-        return encrypt(ByteBuffer.wrap(plaintext), sessionId, sessions);
+        return encrypt(plaintext, asList(addAll(sessions, sessionId)));
     }
 
-    default CompletableFuture<Ciphertext> encrypt(ByteBuffer plaintext, List<SessionId> sessions)
-            throws OnionEncryptionException {
-
-        if (sessions.isEmpty())
-            throw new IllegalArgumentException("At least one sessionId is required for encryption");
-
-        if (sessions.size() == 1)
-            return encrypt(plaintext, sessions.get(0));
-
-        val sessionArg = sessions.get(0);
-        val sessionsArg = sessions.stream().skip(1).toArray(SessionId[]::new);
-
-        return encrypt(plaintext, sessionArg, sessionsArg);
+    default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, SessionId sessionId, SessionId... sessions)
+        throws OnionEncryptionException {
+        return encrypt(ByteBuffer.wrap(plaintext), sessionId, sessions);
     }
 
     default CompletableFuture<Ciphertext> encrypt(byte[] plaintext, List<SessionId> sessions)

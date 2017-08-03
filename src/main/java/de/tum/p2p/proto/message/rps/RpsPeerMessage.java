@@ -30,6 +30,8 @@ import static org.apache.commons.lang3.Validate.notNull;
  * It contains the peer identity and the network address of a peer
  * which is selected by RPS at random. The address may be either IPv4
  * or IPv6
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 @Accessors(fluent = true)
 @ToString @EqualsAndHashCode(callSuper = true)

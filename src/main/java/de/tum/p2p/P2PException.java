@@ -4,6 +4,8 @@ package de.tum.p2p;
  * {@code P2PException} is the superclass of those exceptions
  * that can be thrown during the normal operation of the whole
  * P2P application
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public class P2PException extends RuntimeException {
 

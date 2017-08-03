@@ -4,6 +4,11 @@ import java.math.BigInteger;
 
 import static java.lang.Math.abs;
 
+/**
+ * {@code TypeLimits} contains definition of unsigned types, missed in Java
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 public final class TypeLimits {
 
     private TypeLimits() {

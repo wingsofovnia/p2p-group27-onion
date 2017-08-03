@@ -1,14 +1,18 @@
 package de.tum.p2p.onion.auth;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+/**
+ * {@code SessionId} an id that is used to identify a tunnel' session
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 @EqualsAndHashCode
-@Getter @Accessors(fluent = true)
 public class SessionId {
+
+    public static final int BYTES = Short.BYTES;
 
     private final Short id;
 
@@ -18,6 +22,10 @@ public class SessionId {
 
     public static SessionId wrap(Short id) {
         return new SessionId(id);
+    }
+
+    public static SessionId wrap(Integer id) {
+        return new SessionId(id.shortValue());
     }
 
     public Short raw() {

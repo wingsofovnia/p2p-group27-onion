@@ -12,6 +12,8 @@ import static org.apache.commons.lang3.Validate.notNull;
 /**
  * Encapsulates the result of encryption performed on plaintext
  * using {@link OnionAuthorizer#encrypt(ByteBuffer, SessionId, SessionId...)}
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)

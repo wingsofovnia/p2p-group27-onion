@@ -1,7 +1,6 @@
 package de.tum.p2p.proto.message.onion.forwarding;
 
 import de.tum.p2p.onion.forwarding.TunnelId;
-import de.tum.p2p.proto.message.MessageType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -10,65 +9,74 @@ import lombok.val;
 
 import java.nio.ByteBuffer;
 
+import static de.tum.p2p.proto.message.MessageType.ONION_TUNNEL_EXTENDED;
+import static de.tum.p2p.util.ByteBuffers.bufferAllBytes;
 import static de.tum.p2p.util.Handshakes.notOversizedHadshake;
 import static java.lang.Short.toUnsignedInt;
 
 /**
- * {@code TunnelExtendedMessage} represents a confirmation of tunnel
- * extension and carries a handshake HS2 from a remote peer on the
- * tunnel's end (Bob)
+ * {@code TunnelExtendedMessage} is a message that may be propagated down
+ * the tunnel to the originator by a new peer who decided to be a member of
+ * the tunnel on {@link TunnelExtendMessage} request.
+ * <p>
+ * Packet structure:
+ * <pre>
+ * |-------------|-------------|
+ * |     LP*     |  EXTEND_ED  |
+ * |---------------------------|
+ * |         TUNNEL ID         |
+ * |---------------------------|
+ * |    REQ ID   |   HS2 LEN   |
+ * |-------------|-------------|
+ * |         HANDSHAKE         |
+ * |-------------|-------------|
+ * </pre>
+ * *LP - Frame Length Prefixing is a Netty's responsibility and is not included
+ * in the message class itself
+ *
+ * @see TunnelExtendedMessage
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
-@Accessors(fluent = true) @Getter
+@Accessors(fluent = true)
 @ToString @EqualsAndHashCode(callSuper = true)
-public class TunnelExtendedMessage extends OnionMessage {
+public class TunnelExtendedMessage extends TraceableTypedTunnelMessage {
 
-    private final TunnelId tunnelId;
-
-    private final int requestId;
-
+    @Getter
     private final byte[] handshake;
 
-    public TunnelExtendedMessage(TunnelId tunnelId, int requestId, byte[] handshake) {
-        super(MessageType.ONION_TUNNEL_EXTENDED);
-
-        this.tunnelId = tunnelId;
-        this.requestId = requestId;
+    public TunnelExtendedMessage(TunnelId tunnelId, RequestId requestId, byte[] handshake) {
+        super(tunnelId, requestId, ONION_TUNNEL_EXTENDED);
         this.handshake = notOversizedHadshake(handshake);
     }
 
-    public static TunnelExtendedMessage of(TunnelId tunnelId, int requestId, byte[] handshake) {
-        return new TunnelExtendedMessage(tunnelId, requestId, handshake);
+    public TunnelExtendedMessage(TunnelId tunnelId, RequestId requestId, ByteBuffer handshake) {
+        this(tunnelId, requestId, bufferAllBytes(handshake));
     }
 
-    public TunnelExtendedMessage(TunnelId tunnelId, int requestId, ByteBuffer handshake) {
-        this(tunnelId, requestId, handshake.array());
-    }
-
-    public static TunnelExtendedMessage of(TunnelId tunnelId, int requestId, ByteBuffer handshake) {
-        return new TunnelExtendedMessage(tunnelId, requestId, handshake);
+    public TunnelExtendedMessage(TunnelId tunnelId, byte[] handshake) {
+        this(tunnelId, null, handshake);
     }
 
     @Override
     protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
-        typedMessageBuffer.putInt(tunnelId.raw());
-        typedMessageBuffer.putInt(requestId);
-
         typedMessageBuffer.putShort((short) handshake.length);
         typedMessageBuffer.put(handshake);
 
         return typedMessageBuffer;
     }
 
-    public static TunnelExtendedMessage fromBytes(byte[] rawTypedMessage) {
-        val rawTunnelExtendedMessage = untype(rawTypedMessage, MessageType.ONION_TUNNEL_EXTENDED);
+    public static TunnelExtendedMessage fromBytes(byte[] bytes) {
+        val bytesBuffer = ByteBuffer.wrap(bytes);
+        val rawTraceableTypedTunnelMsg = TraceableTypedTunnelMessage.fromBytes(bytesBuffer, ONION_TUNNEL_EXTENDED);
 
-        val parsedTunnelId = rawTunnelExtendedMessage.getInt();
-        val parsedRequestId = rawTunnelExtendedMessage.getInt();
+        val parsedTunnelId = rawTraceableTypedTunnelMsg.tunnelId();
+        val parsedRequestId = rawTraceableTypedTunnelMsg.requestId();
 
-        val parsedHandshakeSize = toUnsignedInt(rawTunnelExtendedMessage.getShort());
+        val parsedHandshakeSize = toUnsignedInt(bytesBuffer.getShort());
         val parsedHandshake = new byte[parsedHandshakeSize];
-        rawTunnelExtendedMessage.get(parsedHandshake);
+        bytesBuffer.get(parsedHandshake);
 
-        return TunnelExtendedMessage.of(TunnelId.wrap(parsedTunnelId), parsedRequestId, parsedHandshake);
+        return new TunnelExtendedMessage(parsedTunnelId, parsedRequestId, parsedHandshake);
     }
 }

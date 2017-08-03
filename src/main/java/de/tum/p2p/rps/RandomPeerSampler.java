@@ -1,6 +1,7 @@
 package de.tum.p2p.rps;
 
 import de.tum.p2p.Peer;
+import lombok.experimental.var;
 import lombok.val;
 
 import java.io.Closeable;
@@ -11,8 +12,9 @@ import java.util.concurrent.ExecutionException;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 /**
- * {@code RandomPeerSampler} is geared towards helping
- * find {@link Peer} at random.
+ * {@code RandomPeerSampler} is geared towards helping find {@link Peer} at random.
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public interface RandomPeerSampler extends Closeable {
 
@@ -27,6 +29,25 @@ public interface RandomPeerSampler extends Closeable {
      * @throws PeerSamplingException in case of errors during RPSing
      */
     CompletableFuture<Peer> sample() throws PeerSamplingException;
+
+    default CompletableFuture<Peer> sampleNot(Peer exclusion) throws PeerSamplingException {
+        return sampleNot(Collections.singletonList(exclusion));
+    }
+
+    default CompletableFuture<Peer> sampleNot(List<Peer> exclusions) throws PeerSamplingException {
+        return supplyAsync(() -> {
+            try {
+                var sample = sample().get();
+
+                while (exclusions.contains(sample))
+                    sample = sample().get();
+
+                return sample;
+            } catch (InterruptedException | ExecutionException e) {
+                throw new PeerSamplingException("Failed to sample a peer", e);
+            }
+        });
+    }
 
     /**
      * Gets a particular amount of random {@link Peer}s

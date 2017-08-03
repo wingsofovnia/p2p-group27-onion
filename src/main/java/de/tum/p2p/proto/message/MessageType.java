@@ -2,6 +2,14 @@ package de.tum.p2p.proto.message;
 
 import lombok.val;
 
+import java.nio.ByteBuffer;
+
+/**
+ * {@code MessageType} represents a message type used in headers
+ * of {@link Message}s.
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 public enum MessageType {
     UNKNOWN(0),
 
@@ -20,8 +28,10 @@ public enum MessageType {
 
     // ONION P2P / UDP
     ONION_TUNNEL_EXTEND(575),
+    ONION_TUNNEL_CONNECT(577),
     ONION_TUNNEL_EXTENDED(576),
     ONION_TUNNEL_DATUM(580),
+    ONION_TUNNEL_COVER(581),
     ONION_TUNNEL_RETIRE(585),
     ONION_TUNNEL_ERROR(590);
 
@@ -43,5 +53,12 @@ public enum MessageType {
                 return msgType;
 
         return UNKNOWN;
+    }
+
+    public static MessageType fromBytes(byte[] bytes) {
+        if (bytes.length < MessageType.BYTES)
+            return MessageType.UNKNOWN;
+
+        return MessageType.fromCode(ByteBuffer.wrap(bytes).getShort());
     }
 }

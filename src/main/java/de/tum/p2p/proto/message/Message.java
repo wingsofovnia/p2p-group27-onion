@@ -8,6 +8,8 @@ import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 /**
  * A representation of a basic unit of data that travels
  * via network between application APIs
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public interface Message {
 

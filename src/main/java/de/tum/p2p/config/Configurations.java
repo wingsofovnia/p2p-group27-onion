@@ -25,6 +25,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  *     // Gets a File from HOSTKEY_KEY property
  *     Optional<File> hostKeyFile = cfg.hostKey();
  * </pre>
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public class Configurations {
 

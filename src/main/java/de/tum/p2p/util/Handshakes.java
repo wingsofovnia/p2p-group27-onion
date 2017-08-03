@@ -5,6 +5,12 @@ import lombok.val;
 import static de.tum.p2p.util.TypeLimits.USHRT_MAX;
 import static java.lang.String.format;
 
+/**
+ * {@code Handshakes} contains useful utility methods for validating
+ * handshake payloads
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 public final class Handshakes {
 
     public static final int MAX_HANDSHAKE_BYTES = USHRT_MAX;

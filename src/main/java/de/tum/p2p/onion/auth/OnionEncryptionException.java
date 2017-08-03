@@ -5,6 +5,8 @@ import de.tum.p2p.onion.OnionException;
 /**
  * Thrown by {@link OnionAuthorizer} in case of problems during
  * data encryption
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public class OnionEncryptionException extends OnionException {
 

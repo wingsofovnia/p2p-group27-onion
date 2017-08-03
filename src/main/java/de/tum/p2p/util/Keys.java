@@ -12,6 +12,11 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.toObject;
 import static org.apache.commons.lang3.ArrayUtils.toPrimitive;
 
+/**
+ * {@code Keys} contains util methods for validating and parsing keys
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 public final class Keys {
 
     /**

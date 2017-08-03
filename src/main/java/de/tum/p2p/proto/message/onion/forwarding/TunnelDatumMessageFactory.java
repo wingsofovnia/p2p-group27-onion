@@ -6,37 +6,36 @@ import lombok.val;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage.MAX_PAYLOAD_BYTES;
+import static de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage.PAYLOAD_BYTES;
 import static java.lang.Integer.min;
 import static java.lang.Math.ceil;
 import static java.util.stream.Collectors.toList;
 
+/**
+ * {@code TunnelDatumMessageFactory} used to create {@link TunnelDatumMessage}
+ * that may be of size bigger then {@code TunnelDatumMessage} can carry. Therefore
+ * this factory allows to partition the data and create multiple datum messages.
+ *
+ * @see TunnelDatumMessage
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ */
 public class TunnelDatumMessageFactory {
 
-    public static List<TunnelDatumMessage> ofMany(TunnelId tunnelId, ByteBuffer data, byte[] hmacKey) {
+    public static List<TunnelDatumMessage> ofMany(TunnelId tunnelId, ByteBuffer data) {
         return partitions(data)
-            .map(payload -> new TunnelDatumMessage(tunnelId, byteBufferToArray(payload), hmacKey))
-            .collect(toList());
-    }
-
-    public static List<TunnelDatumMessage> ofMany(TunnelId tunnelId, ByteBuffer plaindata,
-                                           Function<ByteBuffer, ByteBuffer> encryptor, byte[] hmacKey) {
-
-        return partitions(plaindata)
-            .map(encryptor)
-            .map(ciphertex -> new TunnelDatumMessage(tunnelId, byteBufferToArray(ciphertex), hmacKey))
+            .map(payload -> new TunnelDatumMessage(tunnelId, byteBufferToArray(payload)))
             .collect(toList());
     }
 
     private static Stream<ByteBuffer> partitions(ByteBuffer data) {
-        val partitionAmount = (int) ceil((double) data.remaining() / MAX_PAYLOAD_BYTES);
+        val partitionAmount = (int) ceil((double) data.remaining() / PAYLOAD_BYTES);
 
         val partitions = new ArrayList<ByteBuffer>(partitionAmount);
         for (int i = 0; i < partitionAmount; i++) {
-            val payloadSize = min(data.remaining(), MAX_PAYLOAD_BYTES);
+            val payloadSize = min(data.remaining(), PAYLOAD_BYTES);
 
             val payload = new byte[payloadSize];
             data.get(payload);

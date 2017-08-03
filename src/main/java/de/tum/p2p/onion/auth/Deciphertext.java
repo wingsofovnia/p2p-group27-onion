@@ -10,8 +10,9 @@ import java.nio.ByteBuffer;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
- * Encapsulates the result of decryption performed
- * by {@link OnionAuthorizer}
+ * Encapsulates the result of decryption performed by {@link OnionAuthorizer}
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)

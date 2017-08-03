@@ -32,14 +32,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import static de.tum.p2p.util.netty.ByteBufs.safeContent;
+import static de.tum.p2p.util.ByteBufs.safeContent;
 
 /**
  * The {@code NettyRemoteRandomPeerSampler} implementation acts like a
  * proxy for a remote {@link RandomPeerSampler}.
  * <p>
- * The comminication with the remote RPS is done via TCP connection
+ * The communication with the remote RPS is done via TCP connection
  * using {@link de.tum.p2p.proto.message.MessageType} 540-541.
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public class NettyRemoteRandomPeerSampler implements RandomPeerSampler {
 

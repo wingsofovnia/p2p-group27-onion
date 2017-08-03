@@ -2,55 +2,51 @@ package de.tum.p2p.proto.message.onion.forwarding;
 
 import de.tum.p2p.onion.forwarding.TunnelId;
 import de.tum.p2p.proto.ProtoException;
-import de.tum.p2p.proto.message.MessageType;
-import de.tum.p2p.util.Nets.IPVersion;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.val;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import static de.tum.p2p.proto.message.MessageType.ONION_TUNNEL_EXTEND;
 import static de.tum.p2p.util.Handshakes.notOversizedHadshake;
 import static de.tum.p2p.util.Keys.notOversizedKey;
 import static de.tum.p2p.util.Keys.parsePublicKey;
-import static de.tum.p2p.util.Nets.guessInetAddressVersion;
-import static de.tum.p2p.util.Nets.validPort;
 import static java.lang.Short.toUnsignedInt;
-import static org.apache.commons.lang3.Validate.notNull;
 
 /**
- * {@code TunnelExtendMessage} represents and intention to extend the tunnel
- * further. It contains the address of the next onion H2 along with the first
- * half of the Diffie-Hellman handshake.
+ * {@code TunnelExtendMessage} is received by the onion that is requested to be
+ * a new peer in the tunnel. The onion response with {@link TunnelExtendedMessage}
+ * then if it accepts the proposition.
+ * <p>
+ * Packet structure:
+ * <pre>
+ * |-------------|-------------|
+ * |     LP*     |    EXTEND   |
+ * |---------------------------|
+ * |         TUNNEL ID         |
+ * |---------------------------|
+ * |    REQ ID   |   KEY LEN   |
+ * |-------------|-------------|
+ * |          SRC KEY          |
+ * |-------------|-------------|
+ * |   HS1 LENG  |  HANDSHAKE  |
+ * |-------------|-------------|
+ * |     HANDSHAKE(CONT..)     |
+ * |-------------|-------------|
+ * </pre>
+ * *LP - Frame Length Prefixing is a Netty's responsibility and is not included
+ * in the message class itself
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 @Accessors(fluent = true)
-@ToString @EqualsAndHashCode(callSuper = true)
-public class TunnelExtendMessage extends OnionMessage {
-
-    private static final AtomicInteger messageIdCounter = new AtomicInteger();
-
-    @Getter
-    private final TunnelId tunnelId;
-
-    @Getter
-    private final int requestId;
-
-    @Getter // unsigned short
-    private final int port;
-
-    private final static byte[] RESERVED = new byte[Short.BYTES - 1]; // 1 byte for the V field (ip version)
-
-    @Getter
-    private final InetAddress destination;
+@EqualsAndHashCode(callSuper = true)
+public class TunnelExtendMessage extends TraceableTypedTunnelMessage {
 
     @Getter
     private final PublicKey sourceKey;
@@ -58,86 +54,22 @@ public class TunnelExtendMessage extends OnionMessage {
     @Getter
     private final byte[] handshake;
 
-    protected TunnelExtendMessage(TunnelId tunnelId, int requestId, InetAddress dest, int port,
-                                  PublicKey sourceKey, byte[] handshake) {
-        super(MessageType.ONION_TUNNEL_EXTEND);
-
-        this.tunnelId = tunnelId;
-        this.requestId = requestId;
-        this.destination = notNull(dest);
-        this.port = validPort(port);
+    public TunnelExtendMessage(TunnelId tunnelId, RequestId requestId, PublicKey sourceKey, byte[] handshake) {
+        super(tunnelId, requestId, ONION_TUNNEL_EXTEND);
         this.sourceKey = notOversizedKey(sourceKey);
         this.handshake = notOversizedHadshake(handshake);
     }
 
-    public TunnelExtendMessage(TunnelId tunnelId, InetAddress dest, int port, PublicKey sourceKey, byte[] handshake) {
-        this(tunnelId, messageIdCounter.getAndIncrement(), dest, port, sourceKey, handshake);
-    }
+    public static TunnelExtendMessage fromBytes(byte[] bytes) {
+        val bytesBuffer = ByteBuffer.wrap(bytes);
+        val rawTraceableTypedTunnelMsg = TraceableTypedTunnelMessage.fromBytes(bytesBuffer, ONION_TUNNEL_EXTEND);
 
-    public static TunnelExtendMessage of(TunnelId tunnelId, InetAddress dest, int port, PublicKey sourceKey, byte[] handshake) {
-        return new TunnelExtendMessage(tunnelId, dest, port, sourceKey, handshake);
-    }
+        val parsedTunnelId = rawTraceableTypedTunnelMsg.tunnelId();
+        val parsedRequestId = rawTraceableTypedTunnelMsg.requestId();
 
-    public TunnelExtendMessage(TunnelId tunnelId, InetAddress dest, int port, PublicKey sourceKey, ByteBuffer handshake) {
-        this(tunnelId, messageIdCounter.getAndIncrement(), dest, port, sourceKey, handshake.array());
-    }
-
-    public static TunnelExtendMessage of(TunnelId tunnelId, InetAddress dest, int port, PublicKey sourceKey, ByteBuffer handshake) {
-        return new TunnelExtendMessage(tunnelId, dest, port, sourceKey, handshake);
-    }
-
-    @Override
-    protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
-        typedMessageBuffer.putInt(tunnelId.raw());
-        typedMessageBuffer.putInt(requestId);
-
-        typedMessageBuffer.putShort((short) port);
-        typedMessageBuffer.put(RESERVED);
-
-        val ipVersion = guessInetAddressVersion(destination);
-        val ipVersionByte = (byte) ipVersion.ordinal();
-        typedMessageBuffer.put(ipVersionByte);
-        typedMessageBuffer.put(destination.getAddress());
-
-        val sourceKeyBytes = sourceKey.getEncoded();
-        typedMessageBuffer.putShort((short) sourceKeyBytes.length);
-        typedMessageBuffer.put(sourceKeyBytes);
-
-        typedMessageBuffer.putShort((short) handshake.length);
-        typedMessageBuffer.put(handshake);
-
-        return typedMessageBuffer;
-    }
-
-    public static TunnelExtendMessage fromBytes(byte[] rawTypedMessage) {
-        val rawTunnelExtendMessage = untype(rawTypedMessage, MessageType.ONION_TUNNEL_EXTEND);
-
-        val parsedTunnelId = rawTunnelExtendMessage.getInt();
-        val parsedRequestId = rawTunnelExtendMessage.getInt();
-
-        val parsedPort = toUnsignedInt(rawTunnelExtendMessage.getShort());
-
-        rawTunnelExtendMessage.position(rawTunnelExtendMessage.position() + RESERVED.length); // skip reserved
-
-        val parsedIpVersionOrdinal = (int) rawTunnelExtendMessage.get();
-        val parsedIpVersion = IPVersion.fromOrdinal(parsedIpVersionOrdinal);
-
-        if (parsedIpVersion == null)
-            throw new ProtoException("Failed to parse InetAddress version - unknown IP version");
-
-        InetAddress parsedDestinationAddress;
-        try {
-            val rawParsedDestinationAddress = new byte[parsedIpVersion.bytes()];
-            rawTunnelExtendMessage.get(rawParsedDestinationAddress);
-
-            parsedDestinationAddress = InetAddress.getByAddress(rawParsedDestinationAddress);
-        } catch (UnknownHostException e) {
-            throw new ProtoException("Failed to parse IP address", e);
-        }
-
-        val parsedSourceKeySize = toUnsignedInt(rawTunnelExtendMessage.getShort());
+        val parsedSourceKeySize = toUnsignedInt(bytesBuffer.getShort());
         val rawParsedSourceKey = new byte[parsedSourceKeySize];
-        rawTunnelExtendMessage.get(rawParsedSourceKey);
+        bytesBuffer.get(rawParsedSourceKey);
 
         PublicKey parsedSourceKey;
         try {
@@ -146,16 +78,22 @@ public class TunnelExtendMessage extends OnionMessage {
             throw new ProtoException("Failed to parse source key: " + Arrays.toString(rawParsedSourceKey), e);
         }
 
-        val parsedHandshakeSize = toUnsignedInt(rawTunnelExtendMessage.getShort());
+        val parsedHandshakeSize = toUnsignedInt(bytesBuffer.getShort());
         val parsedHandshake = new byte[parsedHandshakeSize];
-        rawTunnelExtendMessage.get(parsedHandshake);
+        bytesBuffer.get(parsedHandshake);
 
-        return new TunnelExtendMessage(TunnelId.wrap(parsedTunnelId), parsedRequestId,
-            parsedDestinationAddress, parsedPort,
-            parsedSourceKey, parsedHandshake);
+        return new TunnelExtendMessage(parsedTunnelId, parsedRequestId, parsedSourceKey, parsedHandshake);
     }
 
-    public InetSocketAddress destinationSocketAddress() {
-        return new InetSocketAddress(destination(), port);
+    @Override
+    protected ByteBuffer writeMessage(ByteBuffer messageBuffer) {
+        val sourceKeyBytes = sourceKey.getEncoded();
+        messageBuffer.putShort((short) sourceKeyBytes.length);
+        messageBuffer.put(sourceKeyBytes);
+
+        messageBuffer.putShort((short) handshake.length);
+        messageBuffer.put(handshake);
+
+        return messageBuffer;
     }
 }

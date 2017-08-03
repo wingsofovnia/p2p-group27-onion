@@ -7,9 +7,13 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static de.tum.p2p.util.ByteBuffers.bufferAllBytes;
+
 /**
  * {@code Paddings} contains useful utility methods for padding
  * and unpadding byte arrays
+ *
+ * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
  */
 public final class Paddings {
 
@@ -77,14 +81,28 @@ public final class Paddings {
      * @return padded buffer
      */
     public static ByteBuffer pad(ByteBuffer byteBuffer, int length) {
-        if (length > byteBuffer.limit())
+        val byteBufferDupe = byteBuffer.duplicate();
+
+        if (length > byteBufferDupe.limit())
             throw new IllegalArgumentException("Given length is bigger then byteBuffer limit");
-        else if (byteBuffer.position() == length)
-            return byteBuffer;
+        else if (byteBufferDupe.position() == length)
+            return byteBufferDupe;
 
-        byteBuffer.position(length);
+        byteBufferDupe.position(length);
 
-        return byteBuffer;
+        return byteBufferDupe;
+    }
+
+    public static byte[] padToArray(ByteBuffer byteBuffer, int length) {
+        return bufferAllBytes(pad(byteBuffer, length));
+    }
+
+    public static ByteBuffer pad(ByteBuffer byteBuffer) {
+        return pad(byteBuffer, byteBuffer.limit());
+    }
+
+    public static byte[] padToArray(ByteBuffer byteBuffer) {
+        return padToArray(byteBuffer, byteBuffer.limit());
     }
 
     /**
@@ -95,24 +113,30 @@ public final class Paddings {
      * @return padded buffer
      */
     public static ByteBuffer randPad(ByteBuffer byteBuffer, int length) {
-        if (length > byteBuffer.limit())
-            throw new IllegalArgumentException("Given length is bigger then byteBuffer limit");
-        else if (byteBuffer.position() == length)
-            return byteBuffer;
+        val byteBufferDupe = byteBuffer.duplicate();
 
-        val randPadTrail = new byte[length - byteBuffer.position()];
+        if (length > byteBufferDupe.limit())
+            throw new IllegalArgumentException("Given length is bigger then byteBuffer limit");
+        else if (byteBufferDupe.position() == length)
+            return byteBufferDupe;
+
+        val randPadTrail = new byte[length - byteBufferDupe.position()];
         ThreadLocalRandom.current().nextBytes(randPadTrail);
 
-        byteBuffer.put(randPadTrail);
+        byteBufferDupe.put(randPadTrail);
 
-        return byteBuffer;
+        return byteBufferDupe;
     }
 
-    public static ByteBuffer pad(ByteBuffer byteBuffer) {
-        return pad(byteBuffer, byteBuffer.limit());
+    public static byte[] randPadToArray(ByteBuffer byteBuffer, int length) {
+        return bufferAllBytes(randPad(byteBuffer, length));
     }
 
     public static ByteBuffer randPad(ByteBuffer byteBuffer) {
         return randPad(byteBuffer, byteBuffer.limit());
+    }
+
+    public static byte[] randPadToArray(ByteBuffer byteBuffer) {
+        return randPadToArray(byteBuffer, byteBuffer.limit());
     }
 }
