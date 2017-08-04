@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.ArrayUtils.toPrimitive;
 /**
  * {@code Keys} contains util methods for validating and parsing keys
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public final class Keys {
 

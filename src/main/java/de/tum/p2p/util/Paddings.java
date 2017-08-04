@@ -13,7 +13,7 @@ import static de.tum.p2p.util.ByteBuffers.bufferAllBytes;
  * {@code Paddings} contains useful utility methods for padding
  * and unpadding byte arrays
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public final class Paddings {
 

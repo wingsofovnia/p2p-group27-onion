@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
  * @see <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange">
  * Wikipedia - Diffie–Hellman key exchange</a>
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public interface SessionFactory {
 

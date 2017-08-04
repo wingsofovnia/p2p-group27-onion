@@ -31,7 +31,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  * which is selected by RPS at random. The address may be either IPv4
  * or IPv6
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Accessors(fluent = true)
 @ToString @EqualsAndHashCode(callSuper = true)

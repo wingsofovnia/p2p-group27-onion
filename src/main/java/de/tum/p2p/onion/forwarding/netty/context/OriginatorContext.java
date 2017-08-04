@@ -19,7 +19,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  * and theirs entry {@link Channel} where {@code OnionForwarder} can
  * forward data
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class OriginatorContext implements Closeable {
 

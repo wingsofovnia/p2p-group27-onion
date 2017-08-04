@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  * encoding/decoding and handshakes of type (layer_numers; session_id) to for
  * session establishment.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class InMemoryBase64OnionAuthorizer implements OnionAuthorizer {
 

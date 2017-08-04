@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
  * @see TunnelMessage
  * @see MessageType
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @EqualsAndHashCode(callSuper = true)
 public class TunnelRetireMessage extends TypedTunnelMessage {

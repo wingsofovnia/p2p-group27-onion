@@ -36,11 +36,11 @@ import static org.apache.commons.lang3.Validate.notNull;
  *     and {@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageEncoder}</li>
  * </ul>
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class ClientChannelFactory extends ChannelFactory<Channel> {
 
-    protected ClientChannelFactory(ClientChannelFactoryBuilder builder) {
+    protected ClientChannelFactory(Builder builder) {
         this.bossEventLoop = notNull(builder.bossEventLoop);
         this.channel = notNull(builder.channel);
         this.channelOptions = notNull(builder.channelOptions);
@@ -77,7 +77,7 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
         });
     }
 
-    public static final class ClientChannelFactoryBuilder {
+    public static final class Builder {
 
         private static final EventLoopGroup DEFAULT_BOSS_EVENT_LOOP = new NioEventLoopGroup();
         private static final Class<? extends Channel> DEFAULT_CHANNEL = NioSocketChannel.class;
@@ -99,42 +99,42 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
 
         private LogLevel loggerLevel;
 
-        public ClientChannelFactoryBuilder bossEventLoop(EventLoopGroup bossEventLoop) {
+        public Builder bossEventLoop(EventLoopGroup bossEventLoop) {
             this.bossEventLoop = bossEventLoop;
             return this;
         }
 
-        public ClientChannelFactoryBuilder channel(Class<? extends Channel> channel) {
+        public Builder channel(Class<? extends Channel> channel) {
             this.channel = channel;
             return this;
         }
 
-        public ClientChannelFactoryBuilder channelOptions(Map<ChannelOption, Object> channelOptions) {
+        public Builder channelOptions(Map<ChannelOption, Object> channelOptions) {
             this.channelOptions = channelOptions;
             return this;
         }
 
-        public ClientChannelFactoryBuilder onionAuthorizer(OnionAuthorizer onionAuthorizer) {
+        public Builder onionAuthorizer(OnionAuthorizer onionAuthorizer) {
             this.onionAuthorizer = onionAuthorizer;
             return this;
         }
 
-        public ClientChannelFactoryBuilder routingContext(RoutingContext routingContext) {
+        public Builder routingContext(RoutingContext routingContext) {
             this.routingContext = routingContext;
             return this;
         }
 
-        public ClientChannelFactoryBuilder originatorContext(OriginatorContext originatorContext) {
+        public Builder originatorContext(OriginatorContext originatorContext) {
             this.originatorContext = originatorContext;
             return this;
         }
 
-        public ClientChannelFactoryBuilder eventBus(EventBus eventBus) {
+        public Builder eventBus(EventBus eventBus) {
             this.eventBus = eventBus;
             return this;
         }
 
-        public ClientChannelFactoryBuilder loggerLevel(LogLevel loggerLevel) {
+        public Builder loggerLevel(LogLevel loggerLevel) {
             this.loggerLevel = loggerLevel;
             return this;
         }

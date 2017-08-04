@@ -5,7 +5,7 @@ package de.tum.p2p;
  * that can be thrown during the normal operation of the whole
  * P2P application
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class P2PException extends RuntimeException {
 

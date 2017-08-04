@@ -50,7 +50,7 @@ public class NettyOnionForwarderTest {
         val peer3router = new RoutingContext();
         val peer3auth = spiedInMemoryBase64OnionAuthorizer();
 
-        val peer1onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer1onion = new NettyOnionForwarder.Builder()
             .port(peer1.port())
             .onionAuthorizer(peer1auth)
             .randomPeerSampler(rps)
@@ -60,7 +60,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer2onion
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer2.port())
             .onionAuthorizer(peer2auth)
             .randomPeerSampler(rps)
@@ -70,7 +70,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer3onion
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer3.port())
             .onionAuthorizer(peer3auth)
             .randomPeerSampler(rps)
@@ -106,7 +106,7 @@ public class NettyOnionForwarderTest {
         val peer2 = randomPeers.get(1);
         val peer3 = randomPeers.get(2);
 
-        val peer1onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer1onion = new NettyOnionForwarder.Builder()
             .port(peer1.port())
             .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
             .randomPeerSampler(rps)
@@ -114,7 +114,7 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer2.port())
             .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
             .randomPeerSampler(rps)
@@ -122,7 +122,7 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        val peer3onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer3onion = new NettyOnionForwarder.Builder()
             .port(peer3.port())
             .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
             .randomPeerSampler(rps)
@@ -155,7 +155,7 @@ public class NettyOnionForwarderTest {
         val peer3router = new RoutingContext();
         val peer3auth = spiedInMemoryBase64OnionAuthorizer();
 
-        val peer1onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer1onion = new NettyOnionForwarder.Builder()
             .port(peer1.port())
             .onionAuthorizer(peer1auth)
             .originatorContext(peer1originContext)
@@ -165,7 +165,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer2onion
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer2.port())
             .onionAuthorizer(peer2auth)
             .randomPeerSampler(rps)
@@ -176,7 +176,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer3onion
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer3.port())
             .onionAuthorizer(peer3auth)
             .randomPeerSampler(rps)
@@ -213,7 +213,7 @@ public class NettyOnionForwarderTest {
         val peer3 = randomPeers.get(2);
         val peer3auth = spiedInMemoryBase64OnionAuthorizer();
 
-        val peer1onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer1onion = new NettyOnionForwarder.Builder()
             .port(peer1.port())
             .onionAuthorizer(peer1auth)
             .randomPeerSampler(rps)
@@ -222,7 +222,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer2onion
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer2.port())
             .onionAuthorizer(peer2auth)
             .randomPeerSampler(rps)
@@ -231,7 +231,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer3onion
-        val peer3onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer3onion = new NettyOnionForwarder.Builder()
             .port(peer3.port())
             .onionAuthorizer(peer3auth)
             .randomPeerSampler(rps)
@@ -263,7 +263,7 @@ public class NettyOnionForwarderTest {
         val peer2 = randomPeers.get(1);
         val peer3 = randomPeers.get(2);
 
-        val peer1onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer1onion = new NettyOnionForwarder.Builder()
             .port(peer1.port())
             .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
             .randomPeerSampler(rps)
@@ -271,7 +271,7 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer2.port())
             .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
             .randomPeerSampler(rps)
@@ -279,7 +279,7 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        val peer3onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer3onion = new NettyOnionForwarder.Builder()
             .port(peer3.port())
             .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
             .randomPeerSampler(rps)
@@ -336,7 +336,7 @@ public class NettyOnionForwarderTest {
         val peer3 = randomPeers.get(2);
         val peer3auth = spiedInMemoryBase64OnionAuthorizer();
 
-        val peer1onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer1onion = new NettyOnionForwarder.Builder()
             .port(peer1.port())
             .onionAuthorizer(peer1auth)
             .randomPeerSampler(rps)
@@ -345,7 +345,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer2onion
-        new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        new NettyOnionForwarder.Builder()
             .port(peer2.port())
             .onionAuthorizer(peer2auth)
             .randomPeerSampler(rps)
@@ -354,7 +354,7 @@ public class NettyOnionForwarderTest {
             .listen();
 
         // peer3onion
-        val peer3onion = new NettyOnionForwarder.NettyRemoteOnionForwarderBuilder()
+        val peer3onion = new NettyOnionForwarder.Builder()
             .port(peer3.port())
             .onionAuthorizer(peer3auth)
             .randomPeerSampler(rps)

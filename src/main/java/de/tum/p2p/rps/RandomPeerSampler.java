@@ -14,7 +14,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 /**
  * {@code RandomPeerSampler} is geared towards helping find {@link Peer} at random.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public interface RandomPeerSampler extends Closeable {
 

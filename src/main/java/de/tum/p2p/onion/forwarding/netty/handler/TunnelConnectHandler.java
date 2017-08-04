@@ -19,7 +19,7 @@ import java.util.List;
  * or create a {@link de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage} and
  * ask the peer to be a new member of the tunnel.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class TunnelConnectHandler extends MessageToMessageDecoder<TunnelConnectEncryptedMessage> {

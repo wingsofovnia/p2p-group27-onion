@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
  * The Onion Forwarder is responsible for forwarding data between
  * API connections and Onion Tunnels.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public interface OnionForwarder extends Closeable {
 

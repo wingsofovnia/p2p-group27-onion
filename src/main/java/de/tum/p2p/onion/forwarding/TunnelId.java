@@ -10,7 +10,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  * {@code TunnelId} encapsulates an id that is used to identify a tunnel
  * withing an onion
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @EqualsAndHashCode
 public class TunnelId {

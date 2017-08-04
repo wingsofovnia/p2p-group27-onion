@@ -6,7 +6,7 @@ import io.netty.buffer.Unpooled;
 /**
  * {@code ByteBufs} contains util methods for Netty's {@link ByteBuf}ers
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public final class ByteBufs {
 

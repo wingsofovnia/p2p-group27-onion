@@ -10,7 +10,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  * {@code RequestId} encapsulates an id of a request used
  * for mapping messages in communication of request-response manner
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @EqualsAndHashCode
 public class RequestId {

@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
  * {@code MessageType} represents a message type used in headers
  * of {@link Message}s.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public enum MessageType {
     UNKNOWN(0),

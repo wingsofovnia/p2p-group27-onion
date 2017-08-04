@@ -7,7 +7,7 @@ import static java.lang.Math.abs;
 /**
  * {@code TypeLimits} contains definition of unsigned types, missed in Java
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public final class TypeLimits {
 

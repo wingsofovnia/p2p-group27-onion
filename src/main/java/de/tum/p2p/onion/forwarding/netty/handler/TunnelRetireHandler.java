@@ -13,7 +13,7 @@ import lombok.val;
  * and clears {@link RoutingContext} from routes assigned with {@code TunnelId}
  * given in {@code TunnelRetireMessage}.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class TunnelRetireHandler extends SimpleChannelInboundHandler<TunnelRetireMessage> {
 

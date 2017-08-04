@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  * @param <T> a socket channel that will be used for bootstrapping
  *            the channel
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 abstract class ChannelFactory<T extends Channel> {
 

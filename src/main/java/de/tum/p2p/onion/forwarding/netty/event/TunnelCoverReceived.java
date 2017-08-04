@@ -20,7 +20,7 @@ import lombok.experimental.Accessors;
  * @see TunnelDatumMessage
  * @see de.tum.p2p.onion.forwarding.netty.NettyOnionForwarder#cover(int)
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)

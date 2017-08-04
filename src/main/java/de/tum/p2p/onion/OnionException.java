@@ -8,7 +8,7 @@ import de.tum.p2p.P2PException;
  * {@link de.tum.p2p.onion.forwarding.OnionForwarder} or
  * {@link de.tum.p2p.onion.auth.OnionAuthorizer} modules
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class OnionException extends P2PException {
 

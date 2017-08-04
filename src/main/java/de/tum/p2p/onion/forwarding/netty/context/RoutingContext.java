@@ -19,7 +19,7 @@ import static org.apache.commons.lang3.ObjectUtils.anyNotNull;
  * previous and next hops {@link Channel}s mapped to corresponding
  * {@link TunnelId}
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public final class RoutingContext implements Closeable {
 

@@ -12,7 +12,7 @@ import static org.apache.commons.lang3.Validate.notNull;
 /**
  * Encapsulates the result of decryption performed by {@link OnionAuthorizer}
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)

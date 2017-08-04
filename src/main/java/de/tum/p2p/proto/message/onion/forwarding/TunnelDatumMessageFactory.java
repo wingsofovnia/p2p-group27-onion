@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toList;
  *
  * @see TunnelDatumMessage
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class TunnelDatumMessageFactory {
 

@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
  * unwrapping {@code TunnelDatumEncryptedMessage} by {@link TunnelDatumEncryptedHandler}.
  * It checks whether the datum is cover or not and then notify {@code OnionForwarder}'s data listeners.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class TunnelDatumHandler extends SimpleChannelInboundHandler<TunnelDatumMessage> {

@@ -10,13 +10,13 @@ import static org.apache.commons.lang3.ArrayUtils.addAll;
 /**
  * {@code OnionAuthorizer} encapsulates authentication and encryption
  * mechanisms used while building onion tunnels. It implements establishing
- * session keys given hostkeys of hops, and onion layer-encryption &
+ * session keys given hostkeys of hops, and onion layer-encryption and
  * decryption of payload data.
  *
  * @see <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange">
  * Wikipedia - Diffie–Hellman key exchange</a>
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public interface OnionAuthorizer {
 

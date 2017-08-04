@@ -6,7 +6,7 @@ import de.tum.p2p.onion.OnionException;
  * Thrown to indicate that {@link OnionForwarder} came across
  * error during initialization of {@link OnionForwarder} itself
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class OnionInitializationException extends OnionException {
 

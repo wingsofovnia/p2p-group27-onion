@@ -21,7 +21,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  * @see de.tum.p2p.onion.forwarding.netty.handler.TunnelExtendedHandler
  * @see TunnelExtendedMessage
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @ToString @EqualsAndHashCode
 @Getter @Accessors(fluent = true)

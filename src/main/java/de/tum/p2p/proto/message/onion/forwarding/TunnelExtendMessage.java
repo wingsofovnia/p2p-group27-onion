@@ -42,7 +42,7 @@ import static java.lang.Short.toUnsignedInt;
  * *LP - Frame Length Prefixing is a Netty's responsibility and is not included
  * in the message class itself
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Accessors(fluent = true)
 @EqualsAndHashCode(callSuper = true)

@@ -9,7 +9,7 @@ import static java.lang.String.format;
  * {@code Handshakes} contains useful utility methods for validating
  * handshake payloads
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public final class Handshakes {
 

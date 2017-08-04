@@ -17,7 +17,7 @@ import java.util.List;
  * unwrap it to {@link de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage} so that the
  * {@link TunnelDatumHandler} can consume it and publish datum arrival event.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class TunnelDatumEncryptedHandler extends MessageToMessageDecoder<TunnelDatumEncryptedMessage> {

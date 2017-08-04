@@ -42,7 +42,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  *
  * @see TunnelDatumEncryptedMessage
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Accessors(fluent = true)
 @EqualsAndHashCode(callSuper = true)

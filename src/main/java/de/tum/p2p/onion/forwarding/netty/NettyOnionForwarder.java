@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 
+import static de.tum.p2p.proto.message.onion.forwarding.TunnelConnectEncryptedMessage.fromConnect;
 import static de.tum.p2p.proto.message.onion.forwarding.TunnelDatumEncryptedMessage.fromDatum;
 import static de.tum.p2p.util.ByteBuffers.bufferAllBytes;
 import static de.tum.p2p.util.Nets.localhost;
@@ -64,7 +65,7 @@ import static java.util.stream.Collectors.joining;
  *     <li>CS - Client Socket</li>
  * </ul>
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class NettyOnionForwarder implements OnionForwarder {
@@ -93,7 +94,7 @@ public class NettyOnionForwarder implements OnionForwarder {
 
     private final Peer me;
 
-    private NettyOnionForwarder(NettyRemoteOnionForwarderBuilder builder) {
+    private NettyOnionForwarder(Builder builder) {
         Validate.isTrue(builder.intermediateHops > 0, "At least one intermediate hop is required");
         if (builder.intermediateHops < MIN_INTERMEDIATE_HOPS_WARN)
             log.warn("Amount of required intermediate hops is very low. " +
@@ -206,17 +207,7 @@ public class NettyOnionForwarder implements OnionForwarder {
                     val plainConnMsg = new TunnelConnectMessage(tunnelId, requestId, newHop.address(),
                         newHop.port(), me.publicKey(), bufferAllBytes(handshake1));
 
-
-                    tunnelExtendMsg = TunnelConnectEncryptedMessage.fromConnect(plainConnMsg, onionAuthorizer, sessionId).join();
-                    /*tunnelExtendMsg = new TunnelExtendMessage.Builder()
-                        .encryption(onionAuthorizer, sessionId)
-                        .tunnelId(tunnelId)
-                        .requestId(requestId)
-                        .destination(newHop.address())
-                        .port(newHop.port())
-                        .sourceKey(me.publicKey())
-                        .handshake(handshake1)
-                        .build();*/
+                    tunnelExtendMsg = fromConnect(plainConnMsg, onionAuthorizer, sessionId).join();
                 }
 
                 eventBus.completeFutureSession(requestId, futureTunnelSession);
@@ -335,7 +326,7 @@ public class NettyOnionForwarder implements OnionForwarder {
         }
     }
 
-    public static class NettyRemoteOnionForwarderBuilder {
+    public static class Builder {
 
         private EventLoopGroup clientBossEventLoop;
         private EventLoopGroup serverBossEventLoop;
@@ -361,93 +352,93 @@ public class NettyOnionForwarder implements OnionForwarder {
         private EventBus eventBus = new EventBus();
         private LogLevel loggerLevel;
 
-        public NettyRemoteOnionForwarderBuilder clientBossEventLoop(EventLoopGroup clientBossEventLoop) {
+        public Builder clientBossEventLoop(EventLoopGroup clientBossEventLoop) {
             this.clientBossEventLoop = clientBossEventLoop;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder serverBossEventLoop(EventLoopGroup serverBossEventLoop) {
+        public Builder serverBossEventLoop(EventLoopGroup serverBossEventLoop) {
             this.serverBossEventLoop = serverBossEventLoop;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder serverWorkerEventLoop(EventLoopGroup serverWorkerEventLoop) {
+        public Builder serverWorkerEventLoop(EventLoopGroup serverWorkerEventLoop) {
             this.serverWorkerEventLoop = serverWorkerEventLoop;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder clientChannel(Class<? extends Channel> clientChannel) {
+        public Builder clientChannel(Class<? extends Channel> clientChannel) {
             this.clientChannel = clientChannel;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder clientChannelOptions(Map<ChannelOption, Object> clientChannelOptions) {
+        public Builder clientChannelOptions(Map<ChannelOption, Object> clientChannelOptions) {
             this.clientChannelOptions = clientChannelOptions;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder serverChannel(Class<? extends ServerChannel> serverChannel) {
+        public Builder serverChannel(Class<? extends ServerChannel> serverChannel) {
             this.serverChannel = serverChannel;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder serverChannelOptions(Map<ChannelOption, Object> serverChannelOptions) {
+        public Builder serverChannelOptions(Map<ChannelOption, Object> serverChannelOptions) {
             this.serverChannelOptions = serverChannelOptions;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder publicKey(PublicKey publicKey) {
+        public Builder publicKey(PublicKey publicKey) {
             this.publicKey = publicKey;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder inetAddress(InetAddress inetAddress) {
+        public Builder inetAddress(InetAddress inetAddress) {
             this.inetAddress = inetAddress;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder port(int port) {
+        public Builder port(int port) {
             this.port = port;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder intermediateHops(Integer intermediateHops) {
+        public Builder intermediateHops(Integer intermediateHops) {
             this.intermediateHops = intermediateHops;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder randomPeerSampler(RandomPeerSampler randomPeerSampler) {
+        public Builder randomPeerSampler(RandomPeerSampler randomPeerSampler) {
             this.randomPeerSampler = randomPeerSampler;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder onionAuthorizer(OnionAuthorizer onionAuthorizer) {
+        public Builder onionAuthorizer(OnionAuthorizer onionAuthorizer) {
             this.onionAuthorizer = onionAuthorizer;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder originatorContext(OriginatorContext originatorContext) {
+        public Builder originatorContext(OriginatorContext originatorContext) {
             this.originatorContext = originatorContext;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder routingContext(RoutingContext routingContext) {
+        public Builder routingContext(RoutingContext routingContext) {
             this.routingContext = routingContext;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder eventBus(EventBus eventBus) {
+        public Builder eventBus(EventBus eventBus) {
             this.eventBus = eventBus;
             return this;
         }
 
-        public NettyRemoteOnionForwarderBuilder loggerLevel(LogLevel loggerLevel) {
+        public Builder loggerLevel(LogLevel loggerLevel) {
             this.loggerLevel = loggerLevel;
             return this;
         }
 
         private ServerChannelFactory buildServerChannelFactory() {
-            val serverChannelFactoryBuilder = new ServerChannelFactory.ServerChannelFactoryBuilder();
+            val serverChannelFactoryBuilder = new ServerChannelFactory.Builder();
 
             if (nonNull(serverBossEventLoop))
                 serverChannelFactoryBuilder.bossEventLoop(serverBossEventLoop);
@@ -473,7 +464,7 @@ public class NettyOnionForwarder implements OnionForwarder {
         }
 
         private ClientChannelFactory buildClientChannelFactory() {
-            val clientChannelFactoryBuilder= new ClientChannelFactory.ClientChannelFactoryBuilder();
+            val clientChannelFactoryBuilder= new ClientChannelFactory.Builder();
 
             if (nonNull(clientBossEventLoop))
                 clientChannelFactoryBuilder.bossEventLoop(serverBossEventLoop);

@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
  * This is {@code OUTBOUND/REQUEST} only message, therefore there is no
  * fromBytes method.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @ToString @EqualsAndHashCode(callSuper = true)
 public class RpsQueryMessage extends TypedMessage {

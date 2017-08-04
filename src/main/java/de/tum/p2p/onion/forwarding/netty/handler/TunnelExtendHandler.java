@@ -18,7 +18,7 @@ import java.util.List;
  * by the onion that is requested to be a new peer in the tunnel. The handler forms
  * a {@link TunnelExtendedMessage} and propagates up the tunnel.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class TunnelExtendHandler extends MessageToMessageDecoder<TunnelExtendMessage> {

@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * An in memory implementation of {@link RandomPeerSampler}
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class InMemoryRandomPeerSampler implements RandomPeerSampler {
 

@@ -13,7 +13,7 @@ import java.util.List;
  * {@code OnionMessageDecoder} decodes ONION_TUNNEL_* messages
  * from bytes to corresponding message type.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class TunnelMessageEncoder extends MessageToMessageEncoder<TunnelMessage> {

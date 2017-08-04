@@ -56,6 +56,12 @@ dependencies {
     testCompile files('lib/voip.jar')
 }
 
+task javadocs(type: Javadoc) {
+    classpath += configurations.compileOnly
+    classpath += configurations.compile
+    source = sourceSets.main.allJava
+}
+
 clean {
     delete fileTree('.') { include '**/*.log' }
 }

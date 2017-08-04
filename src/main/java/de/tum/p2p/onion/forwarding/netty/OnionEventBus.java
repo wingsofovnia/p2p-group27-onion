@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * {@code OnionEventBus} encapsulates Guava's {@link EventBus} to provide
  * some useful {@code OnionForwarder} specific functionality
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class OnionEventBus {
 

@@ -9,7 +9,7 @@ import lombok.val;
 
 import java.nio.ByteBuffer;
 
-import static de.tum.p2p.util.ByteBuffers.bufferConsumedBytes;
+import static de.tum.p2p.util.ByteBuffers.bufferWrittenBytes;
 import static de.tum.p2p.util.Paddings.randPadToArray;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
@@ -35,7 +35,7 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
  * @see MessageType
  * @see RequestId
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Accessors(fluent = true)
 @EqualsAndHashCode(callSuper = true)
@@ -80,7 +80,7 @@ public abstract class TraceableTypedTunnelMessage extends TypedTunnelMessage {
         val disassembledTunnelMessage = writeMessage(tunnelMsgBuffer);
 
         if (!pad)
-            return bufferConsumedBytes(disassembledTunnelMessage);
+            return bufferWrittenBytes(disassembledTunnelMessage);
 
         return randPadToArray(disassembledTunnelMessage);
     }

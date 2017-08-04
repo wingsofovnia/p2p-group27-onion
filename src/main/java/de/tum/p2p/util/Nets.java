@@ -19,7 +19,7 @@ import static de.tum.p2p.util.TypeLimits.USHRT_MAX;
  * network related stuff, generating random ports and ip version
  * detection.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public final class Nets {
 

@@ -41,7 +41,7 @@ import static de.tum.p2p.util.ByteBufs.safeContent;
  * The communication with the remote RPS is done via TCP connection
  * using {@link de.tum.p2p.proto.message.MessageType} 540-541.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class NettyRemoteRandomPeerSampler implements RandomPeerSampler {
 

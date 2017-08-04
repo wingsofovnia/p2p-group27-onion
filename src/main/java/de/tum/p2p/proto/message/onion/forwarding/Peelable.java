@@ -6,7 +6,7 @@ package de.tum.p2p.proto.message.onion.forwarding;
  *
  * @param <T> a peelable Class
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public interface Peelable<T extends TunnelMessage> {
 

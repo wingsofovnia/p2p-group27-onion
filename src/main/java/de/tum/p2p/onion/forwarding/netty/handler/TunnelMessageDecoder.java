@@ -20,7 +20,7 @@ import static de.tum.p2p.util.ByteBufs.safeContent;
  * type, decoder will treat such messages as {@link TunnelDatumEncryptedMessage}
  * (coz it doesn't have a type in a header).
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class TunnelMessageDecoder extends MessageToMessageDecoder<ByteBuf> {

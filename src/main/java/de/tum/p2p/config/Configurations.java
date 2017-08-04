@@ -23,10 +23,10 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
  *     Configurations cfg = Configurations.load("config.ini");
  *
  *     // Gets a File from HOSTKEY_KEY property
- *     Optional<File> hostKeyFile = cfg.hostKey();
+ *     Optional&lt;File&gt; hostKeyFile = cfg.hostKey();
  * </pre>
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 public class Configurations {
 
@@ -136,6 +136,9 @@ public class Configurations {
     /**
      * Loads Configurations from default location, specified by
      * {@link Configurations#DEFAULT_CONFIG_FILEPATH} constant.
+     *
+     * @return a {@link Configurations} instance populated with
+     * settings from default location config
      */
     public static Configurations load() {
         return load(DEFAULT_CONFIG_FILEPATH);

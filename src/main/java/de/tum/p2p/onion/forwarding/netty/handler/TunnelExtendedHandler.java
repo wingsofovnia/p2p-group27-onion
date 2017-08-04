@@ -22,7 +22,7 @@ import java.util.List;
  * Otherwise the ONION_TUNNEL_EXTEND<strong>ED</strong> message is propagated down to the
  * {@code TunnelExtendedPropagator} where message is forwarded BACK to the PREV hop of the tunnel.
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
 public class TunnelExtendedHandler extends MessageToMessageDecoder<TunnelExtendedMessage> {

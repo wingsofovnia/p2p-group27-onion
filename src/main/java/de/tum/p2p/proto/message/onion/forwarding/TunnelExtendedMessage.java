@@ -36,7 +36,7 @@ import static java.lang.Short.toUnsignedInt;
  *
  * @see TunnelExtendedMessage
  *
- * @author Illia Ovchynnikov <illia.ovchynnikov@gmail.com>
+ * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Accessors(fluent = true)
 @ToString @EqualsAndHashCode(callSuper = true)
