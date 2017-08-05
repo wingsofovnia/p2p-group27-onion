@@ -28,15 +28,15 @@ import static org.apache.commons.lang3.Validate.notNull;
  * <p>
  * The {@code ServerChannelFactory}'s pipeline includes:
  * <ul>
- *     <li>{@link TunnelDatumEncryptedHandler}</li>
- *     <li>{@link TunnelExtendHandler}</li>
  *     <li>{@link TunnelRetireHandler}</li>
+ *     <li>{@link TunnelRelayHandler}</li>
  *     <li>{@link TunnelConnectHandler}</li>
+ *     <li>{@link TunnelExtendHandler}</li>
  *     <li>{@link TunnelDatumHandler}</li>
  *     <li>{@link io.netty.handler.codec.FixedLengthFrameDecoder} to discard
  *     missized frames</li>
- *     <li>{@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageDecoder}
- *     and {@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageEncoder}</li>
+ *     <li>{@link TunnelMessageDecoder}</li>
+ *     <li>{@link TunnelMessageEncoder}</li>
  * </ul>
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
@@ -87,11 +87,12 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
 
     private ChannelInitializer serverPipeline() {
         return messagingChannel(pipe -> {
-            pipe.addLast(new TunnelDatumEncryptedHandler(onionAuthorizer, routingContext));
-            pipe.addLast(new TunnelExtendHandler(routingContext, onionAuthorizer));
             pipe.addLast(new TunnelRetireHandler(routingContext));
-            pipe.addLast(new TunnelConnectHandler(routingContext, onionAuthorizer, clientChannelFactory));
+            pipe.addLast(new TunnelRelayHandler(onionAuthorizer, routingContext));
+            pipe.addLast(new TunnelConnectHandler(routingContext, clientChannelFactory));
+            pipe.addLast(new TunnelExtendHandler(routingContext, onionAuthorizer));
             pipe.addLast(new TunnelDatumHandler(eventBus));
+
         });
     }
 

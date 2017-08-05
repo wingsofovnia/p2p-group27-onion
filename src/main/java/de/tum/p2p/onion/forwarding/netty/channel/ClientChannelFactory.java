@@ -5,6 +5,8 @@ import de.tum.p2p.onion.auth.OnionAuthorizer;
 import de.tum.p2p.onion.forwarding.netty.context.OriginatorContext;
 import de.tum.p2p.onion.forwarding.netty.context.RoutingContext;
 import de.tum.p2p.onion.forwarding.netty.handler.TunnelExtendedHandler;
+import de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageDecoder;
+import de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -32,8 +34,8 @@ import static org.apache.commons.lang3.Validate.notNull;
  *     <li>{@link TunnelExtendedHandler}</li>
  *     <li>{@link io.netty.handler.codec.FixedLengthFrameDecoder} to discard
  *     missized frames</li>
- *     <li>{@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageDecoder}
- *     and {@link de.tum.p2p.onion.forwarding.netty.handler.TunnelMessageEncoder}</li>
+ *     <li>{@link TunnelMessageDecoder}</li>
+ *     <li>{@link TunnelMessageEncoder}</li>
  * </ul>
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;

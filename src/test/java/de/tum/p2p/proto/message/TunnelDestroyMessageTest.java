@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 public class TunnelDestroyMessageTest {
 
     // Python eq ~ list(bytearray(struct.pack("!Hi", 563, tunnelId)))
-    // Warning! this will print UNSIGNED writeMessage, therefore:
+    // Warning! this will print UNSIGNED writePayload, therefore:
     // for tunnelId = 999, python will list [2, 51, 0, 0, 3, 231]
     //                 while Java will list [2, 51, 0, 0, 3, -25]
     private static final List<Pair<Message, Byte[]>> GOOD_ENCODED_TUNNEL_DESTROY_MSGS

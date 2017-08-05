@@ -1,7 +1,7 @@
 package de.tum.p2p.onion.forwarding.netty.event;
 
 import de.tum.p2p.onion.forwarding.TunnelId;
-import de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage;
+import de.tum.p2p.onion.forwarding.netty.handler.TunnelDatumHandler;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -18,8 +18,8 @@ import static org.apache.commons.lang3.Validate.notNull;
  *
  * @see com.google.common.eventbus.EventBus
  * @see de.tum.p2p.onion.forwarding.netty.OnionEventBus
- * @see de.tum.p2p.onion.forwarding.netty.handler.TunnelDatumHandler
- * @see TunnelDatumMessage
+ * @see TunnelDatumHandler
+ * @see de.tum.p2p.proto.message.onion.forwarding.composite.TunnelDatum
  * @see de.tum.p2p.onion.forwarding.netty.NettyOnionForwarder#forward(TunnelId, ByteBuffer)
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;

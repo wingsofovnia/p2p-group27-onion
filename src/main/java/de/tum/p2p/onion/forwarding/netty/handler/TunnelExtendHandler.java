@@ -15,8 +15,8 @@ import java.util.List;
 
 /**
  * {@code TunnelExtendHandler} handles incoming {@link TunnelExtendMessage} received
- * by the onion that is requested to be a new peer in the tunnel. The handler forms
- * a {@link TunnelExtendedMessage} and propagates up the tunnel.
+ * by the onion that is requested to be a new peer in the tunnel. The handler generates
+ * HS2, forms a {@link TunnelExtendedMessage} and propagates the message up the tunnel.
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */

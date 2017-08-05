@@ -1,11 +1,16 @@
 package de.tum.p2p.proto.message.onion.forwarding;
 
 import de.tum.p2p.onion.forwarding.TunnelId;
+import de.tum.p2p.proto.ProtoException;
 import de.tum.p2p.proto.message.MessageType;
 import lombok.EqualsAndHashCode;
 import lombok.val;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+
+import static de.tum.p2p.proto.message.MessageType.ONION_TUNNEL_RETIRE;
 
 /**
  * {@code TunnelRetireMessage} used to notify the tunnel peers that the tunnel
@@ -13,17 +18,12 @@ import java.nio.ByteBuffer;
  * <p>
  * Packet structure:
  * <pre>
- * |-------------|-------------|
- * |     LP*     |    RETIRE   |
  * |---------------------------|
  * |         TUNNEL ID         |
  * |---------------------------|
+ * |    RETIRE   |
+ * |-------------|
  * </pre>
- * *LP - Frame Length Prefixing is a Netty's responsibility and is not included
- * in the message class itself
- *
- * @see TunnelMessage
- * @see MessageType
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
@@ -31,20 +31,27 @@ import java.nio.ByteBuffer;
 public class TunnelRetireMessage extends TypedTunnelMessage {
 
     public TunnelRetireMessage(TunnelId tunnelId) {
-        super(tunnelId, MessageType.ONION_TUNNEL_RETIRE);
-    }
-
-    @Override
-    protected ByteBuffer writeMessage(ByteBuffer messageBuffer) {
-        return messageBuffer;
+        super(tunnelId, ONION_TUNNEL_RETIRE);
     }
 
     public static TunnelRetireMessage fromBytes(byte[] bytes) {
-        val bytesBuffer = ByteBuffer.wrap(bytes);
-        val rawTypedTunnelMessage = TypedTunnelMessage.fromBytes(bytesBuffer, MessageType.ONION_TUNNEL_RETIRE);
+        try {
+            val bytesBuffer = ByteBuffer.wrap(bytes);
 
-        val parsedTunnelId = rawTypedTunnelMessage.tunnelId();
+            val parsedTunnelId = TunnelId.wrap(bytesBuffer.getInt());
+            val messageType = MessageType.fromCode(bytesBuffer.getShort());
 
-        return new TunnelRetireMessage(parsedTunnelId);
+            if (messageType != ONION_TUNNEL_RETIRE)
+                throw new IllegalArgumentException("Not a ONION_TUNNEL_RETIRE message");
+
+            return new TunnelRetireMessage(parsedTunnelId);
+        } catch (BufferUnderflowException | BufferOverflowException e) {
+            throw new ProtoException("Failed to parse ONION_TUNNEL_RETIRE message", e);
+        }
+    }
+
+    @Override
+    protected void writeBody(ByteBuffer messageBuffer) {
+        // Retire message doesn't carry any additional payload
     }
 }

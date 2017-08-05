@@ -1,7 +1,7 @@
 package de.tum.p2p.onion.forwarding.netty.event;
 
 import de.tum.p2p.onion.forwarding.TunnelId;
-import de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage;
+import de.tum.p2p.onion.forwarding.netty.handler.TunnelDatumHandler;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,15 +9,15 @@ import lombok.experimental.Accessors;
 
 /**
  * The {@code TunnelCoverReceived} is issued by {@code TunnelDatumHandler}
- * on receiving a <strong>cover</strong> {@code TunnelDatumMessage}.
+ * on receiving a <strong>cover</strong> {@code TunnelDatum}.
  * <p>
  * This event is ignored by {@code OnionForwarder} but is useful for testing
  * purposes or logging.
  *
  * @see com.google.common.eventbus.EventBus
  * @see de.tum.p2p.onion.forwarding.netty.OnionEventBus
- * @see de.tum.p2p.onion.forwarding.netty.handler.TunnelDatumHandler
- * @see TunnelDatumMessage
+ * @see TunnelDatumHandler
+ * @see de.tum.p2p.proto.message.onion.forwarding.composite.TunnelDatum
  * @see de.tum.p2p.onion.forwarding.netty.NettyOnionForwarder#cover(int)
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;

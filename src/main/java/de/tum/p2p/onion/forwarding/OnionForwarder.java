@@ -1,7 +1,6 @@
 package de.tum.p2p.onion.forwarding;
 
 import de.tum.p2p.Peer;
-import de.tum.p2p.proto.message.onion.forwarding.TunnelDatumMessage;
 
 import java.io.Closeable;
 import java.nio.ByteBuffer;
@@ -67,7 +66,7 @@ public interface OnionForwarder extends Closeable {
      * Registers a listener for incoming data message
      * <p>
      * {@code OnionForwarder} will fire {@link BiConsumer#accept(Object, Object)} on
-     * each incoming {@link TunnelDatumMessage}.
+     * each incoming data packet.
      *
      * @param consumer arrived data consumer (lambda)
      */

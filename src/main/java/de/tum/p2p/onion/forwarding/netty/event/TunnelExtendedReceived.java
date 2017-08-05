@@ -2,6 +2,7 @@ package de.tum.p2p.onion.forwarding.netty.event;
 
 import de.tum.p2p.onion.auth.SessionId;
 import de.tum.p2p.onion.forwarding.TunnelId;
+import de.tum.p2p.onion.forwarding.netty.handler.TunnelExtendedHandler;
 import de.tum.p2p.proto.message.onion.forwarding.RequestId;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import lombok.EqualsAndHashCode;
@@ -18,7 +19,7 @@ import static org.apache.commons.lang3.Validate.notNull;
  *
  * @see com.google.common.eventbus.EventBus
  * @see de.tum.p2p.onion.forwarding.netty.OnionEventBus
- * @see de.tum.p2p.onion.forwarding.netty.handler.TunnelExtendedHandler
+ * @see TunnelExtendedHandler
  * @see TunnelExtendedMessage
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;

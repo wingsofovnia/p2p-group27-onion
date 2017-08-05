@@ -16,11 +16,8 @@ import java.util.List;
 
 /**
  * {@code TunnelExtendedHandler} handles ONION_TUNNEL_EXTEND<strong>ED</strong> messages
- * that are designated to <strong>this very</strong> peer, that means this peer is a one
- * that requested to extend the tunnel.
- * <p>
- * Otherwise the ONION_TUNNEL_EXTEND<strong>ED</strong> message is propagated down to the
- * {@code TunnelExtendedPropagator} where message is forwarded BACK to the PREV hop of the tunnel.
+ * and make sure the message arrive to the first peer which will complete tunnel extension,
+ * i.e. the handler will propagate the message down the tunnel till there is a prev hop.
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */

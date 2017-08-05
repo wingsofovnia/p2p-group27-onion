@@ -1,12 +1,16 @@
 package de.tum.p2p.proto.message.onion.forwarding;
 
 import de.tum.p2p.onion.forwarding.TunnelId;
+import de.tum.p2p.proto.ProtoException;
+import de.tum.p2p.proto.message.MessageType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.val;
 
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
 import static de.tum.p2p.proto.message.MessageType.ONION_TUNNEL_EXTENDED;
@@ -21,15 +25,15 @@ import static java.lang.Short.toUnsignedInt;
  * <p>
  * Packet structure:
  * <pre>
- * |-------------|-------------|
- * |     LP*     |  EXTEND_ED  |
  * |---------------------------|
  * |         TUNNEL ID         |
  * |---------------------------|
- * |    REQ ID   |   HS2 LEN   |
- * |-------------|-------------|
- * |         HANDSHAKE         |
- * |-------------|-------------|
+ * |  MESG_TYPE  |   REQE_ID   |
+ * |---------------------------|
+ * |   HS2 LEN   |  HANDSHAKE  |
+ * |---------------------------|
+ * |    HANDSHAKE (CONT...)    |
+ * |---------------------------|
  * </pre>
  * *LP - Frame Length Prefixing is a Netty's responsibility and is not included
  * in the message class itself
@@ -58,25 +62,31 @@ public class TunnelExtendedMessage extends TraceableTypedTunnelMessage {
         this(tunnelId, null, handshake);
     }
 
-    @Override
-    protected ByteBuffer writeMessage(ByteBuffer typedMessageBuffer) {
-        typedMessageBuffer.putShort((short) handshake.length);
-        typedMessageBuffer.put(handshake);
+    public static TunnelExtendedMessage fromBytes(byte[] bytes) {
+        try {
+            val bytesBuffer = ByteBuffer.wrap(bytes);
 
-        return typedMessageBuffer;
+            val parsedTunnelId = TunnelId.wrap(bytesBuffer.getInt());
+            val messageType = MessageType.fromCode(bytesBuffer.getShort());
+
+            if (messageType != ONION_TUNNEL_EXTENDED)
+                throw new IllegalArgumentException("Not a ONION_TUNNEL_EXTENDED message");
+
+            val parsedRequestId = RequestId.wrap(bytesBuffer.getShort());
+
+            val parsedHandshakeSize = toUnsignedInt(bytesBuffer.getShort());
+            val parsedHandshake = new byte[parsedHandshakeSize];
+            bytesBuffer.get(parsedHandshake);
+
+            return new TunnelExtendedMessage(parsedTunnelId, parsedRequestId, parsedHandshake);
+        } catch (BufferUnderflowException | BufferOverflowException e) {
+            throw new ProtoException("Failed to parse ONION_TUNNEL_EXTENDED message", e);
+        }
     }
 
-    public static TunnelExtendedMessage fromBytes(byte[] bytes) {
-        val bytesBuffer = ByteBuffer.wrap(bytes);
-        val rawTraceableTypedTunnelMsg = TraceableTypedTunnelMessage.fromBytes(bytesBuffer, ONION_TUNNEL_EXTENDED);
-
-        val parsedTunnelId = rawTraceableTypedTunnelMsg.tunnelId();
-        val parsedRequestId = rawTraceableTypedTunnelMsg.requestId();
-
-        val parsedHandshakeSize = toUnsignedInt(bytesBuffer.getShort());
-        val parsedHandshake = new byte[parsedHandshakeSize];
-        bytesBuffer.get(parsedHandshake);
-
-        return new TunnelExtendedMessage(parsedTunnelId, parsedRequestId, parsedHandshake);
+    @Override
+    protected void writeBody(ByteBuffer messageBuffer) {
+        messageBuffer.putShort((short) handshake.length);
+        messageBuffer.put(handshake);
     }
 }

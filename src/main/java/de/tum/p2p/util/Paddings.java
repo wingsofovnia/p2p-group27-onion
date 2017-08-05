@@ -139,4 +139,15 @@ public final class Paddings {
     public static byte[] randPadToArray(ByteBuffer byteBuffer) {
         return randPadToArray(byteBuffer, byteBuffer.limit());
     }
+
+    public static ByteBuffer randPadRemaining(ByteBuffer byteBuffer) {
+        val byteBufferDupe = byteBuffer.duplicate();
+
+        val randPadTrail = new byte[byteBuffer.remaining()];
+        ThreadLocalRandom.current().nextBytes(randPadTrail);
+
+        byteBufferDupe.put(randPadTrail);
+
+        return byteBufferDupe;
+    }
 }

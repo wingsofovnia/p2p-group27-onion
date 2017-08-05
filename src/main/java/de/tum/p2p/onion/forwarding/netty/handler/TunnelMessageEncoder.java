@@ -10,8 +10,8 @@ import lombok.val;
 import java.util.List;
 
 /**
- * {@code OnionMessageDecoder} decodes ONION_TUNNEL_* messages
- * from bytes to corresponding message type.
+ * {@code OnionMessageDecoder} decodes ONION_TUNNEL_* messages from bytes
+ * to corresponding message type.
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */

@@ -10,7 +10,14 @@ import de.tum.p2p.onion.forwarding.netty.channel.ClientChannelFactory;
 import de.tum.p2p.onion.forwarding.netty.channel.ServerChannelFactory;
 import de.tum.p2p.onion.forwarding.netty.context.OriginatorContext;
 import de.tum.p2p.onion.forwarding.netty.context.RoutingContext;
-import de.tum.p2p.proto.message.onion.forwarding.*;
+import de.tum.p2p.proto.message.onion.forwarding.RequestId;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelMessage;
+import de.tum.p2p.proto.message.onion.forwarding.TunnelRetireMessage;
+import de.tum.p2p.proto.message.onion.forwarding.composite.TunnelConnect;
+import de.tum.p2p.proto.message.onion.forwarding.composite.TunnelDatum;
+import de.tum.p2p.proto.message.onion.forwarding.composite.TunnelDatumFactory;
+import de.tum.p2p.proto.message.onion.forwarding.composite.TunnelRelayMessage;
 import de.tum.p2p.rps.RandomPeerSampler;
 import io.netty.channel.*;
 import io.netty.handler.logging.LogLevel;
@@ -35,11 +42,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 
-import static de.tum.p2p.proto.message.onion.forwarding.TunnelConnectEncryptedMessage.fromConnect;
-import static de.tum.p2p.proto.message.onion.forwarding.TunnelDatumEncryptedMessage.fromDatum;
 import static de.tum.p2p.util.ByteBuffers.bufferAllBytes;
 import static de.tum.p2p.util.Nets.localhost;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.ForkJoinPool.commonPool;
@@ -159,15 +165,15 @@ public class NettyOnionForwarder implements OnionForwarder {
                 // Remember connection to head peer of the tunnel
                 originatorContext.serve(tunnelId, tunnelEntryChannel);
 
-                val sessionIds = new ArrayList<SessionId>();
+                val sessionIds = new ArrayList<SessionId>(tunnelPeers.size());
 
                 // Boring the tunnel
-                var futurePrevSessionId = extendTunnel(tunnelId, tunnelEntryPeer, null);
+                var futurePrevSessionId = extendTunnel(tunnelId, tunnelEntryPeer, emptyList());
                 for (val peer : tunnelPeers.subList(1, tunnelPeers.size())) {
                     futurePrevSessionId = futurePrevSessionId.thenCompose(sessionId -> {
                         sessionIds.add(sessionId);
 
-                        return extendTunnel(tunnelId, peer, sessionId);
+                        return extendTunnel(tunnelId, peer, sessionIds);
                     });
                 }
 
@@ -186,8 +192,8 @@ public class NettyOnionForwarder implements OnionForwarder {
             return tunnelId;
         });
     }
-    @Deprecated
-    private CompletableFuture<SessionId> extendTunnel(TunnelId tunnelId, Peer newHop, SessionId sessionId) {
+
+    private CompletableFuture<SessionId> extendTunnel(TunnelId tunnelId, Peer newHop, List<SessionId> sessionIds) {
         log.trace("Extending tunnel {} by new peer {}", tunnelId, newHop.socketAddress());
 
         val sessionFactory = onionAuthorizer.sessionFactory();
@@ -198,29 +204,37 @@ public class NettyOnionForwarder implements OnionForwarder {
                 val requestId = RequestId.next();
                 val handshake1 = sessionIdHs1Pair.getRight();
 
-                TunnelMessage tunnelExtendMsg;
+                CompletableFuture<? extends TunnelMessage> futureTunnelExtendReq;
 
-                if (sessionId == null) {
-                    tunnelExtendMsg =
-                        new TunnelExtendMessage(tunnelId, requestId, me.publicKey(), bufferAllBytes(handshake1));
+                if (sessionIds.isEmpty()) {
+                    futureTunnelExtendReq = completedFuture(new TunnelExtendMessage(tunnelId, requestId, me.publicKey(),
+                        bufferAllBytes(handshake1)));
                 } else {
-                    val plainConnMsg = new TunnelConnectMessage(tunnelId, requestId, newHop.address(),
+                    val plainConn = new TunnelConnect(requestId, newHop.address(),
                         newHop.port(), me.publicKey(), bufferAllBytes(handshake1));
 
-                    tunnelExtendMsg = fromConnect(plainConnMsg, onionAuthorizer, sessionId).join();
+                    futureTunnelExtendReq =
+                        new TunnelRelayMessage.Encrypted()
+                            .tunnelId(tunnelId)
+                            .encrypt(onionAuthorizer, sessionIds)
+                            .payload(plainConn)
+                            .build();
                 }
 
-                eventBus.completeFutureSession(requestId, futureTunnelSession);
+                futureTunnelExtendReq.thenAccept(tunnelExtendReq -> {
+                    // Register listener for futureTunnelSession on extend completion
+                    eventBus.completeFutureSession(requestId, futureTunnelSession);
 
-                val tunnelEntryChannel = originatorContext.entry(tunnelId);
-                tunnelEntryChannel.writeAndFlush(tunnelExtendMsg)
-                    .addListener(transfer -> {
-                        if (!transfer.isSuccess())
-                            throw new OnionTunnelingException("Failed to extend tunnel", transfer.cause());
-                    });
+                    val tunnelEntryChannel = originatorContext.entry(tunnelId);
+                    tunnelEntryChannel.writeAndFlush(tunnelExtendReq)
+                        .addListener(transfer -> {
+                            if (!transfer.isSuccess())
+                                throw new OnionTunnelingException("Failed to extend tunnel", transfer.cause());
+                        });
 
-                log.trace("ONION_TUNNEL_EXTEND({}) has been sent to {} via {}, req_id = {}", newHop.socketAddress(),
-                    tunnelEntryChannel.remoteAddress(), tunnelEntryChannel.localAddress(), requestId);
+                    log.trace("ONION_TUNNEL_EXTEND({}) has been sent to {} via {}, req_id = {}", newHop.socketAddress(),
+                        tunnelEntryChannel.remoteAddress(), tunnelEntryChannel.localAddress(), requestId);
+                });
             }).exceptionally(throwable -> {
                 throwable.printStackTrace();
                 return null;
@@ -256,10 +270,15 @@ public class NettyOnionForwarder implements OnionForwarder {
 
         val hopsSessionIds = originatorContext.sessionIds(tunnelId);
 
-        TunnelDatumMessageFactory.ofMany(tunnelId, data).stream()
-            .map(datum -> fromDatum(datum, onionAuthorizer, hopsSessionIds))
-            .forEach(futureEncryptedDatum -> {
-                futureEncryptedDatum.thenAccept(encryptedDatum -> {
+        TunnelDatumFactory.ofMany(data).stream()
+            .map(datum -> {
+                return new TunnelRelayMessage.Encrypted()
+                                .tunnelId(tunnelId)
+                                .encrypt(onionAuthorizer, hopsSessionIds)
+                                .payload(datum)
+                                .build();
+            }).forEach(futureDatumRelay -> {
+                futureDatumRelay.thenAccept(encryptedDatum -> {
                     originatorContext.entry(tunnelId).writeAndFlush(encryptedDatum);
 
                     log.debug("Datum chuck has been pushed by peer {} via tunnel {}", me.socketAddress(), tunnelId);
@@ -272,19 +291,21 @@ public class NettyOnionForwarder implements OnionForwarder {
         if (!originatorContext.isEmpty())
             throw new OnionCoverInterferenceException("Generation of cover traffic when " +
                 "there are active tunnels is prohibited");
-        else if (size > TunnelDatumMessage.PAYLOAD_BYTES)
-            throw new IllegalArgumentException("Too big cover size. " +
-                "Max TunnelDatumMessage payload length = " + TunnelDatumMessage.PAYLOAD_BYTES);
 
         rps.sampleNot(me).thenCompose(this::createTunnel)
             .thenAccept(tunnelId -> {
                 val hopsSessionIds = originatorContext.sessionIds(tunnelId);
 
-                val coverDatum = new TunnelDatumMessage(tunnelId, size);
-                val futureEncryptedDatum = fromDatum(coverDatum, onionAuthorizer, hopsSessionIds);
+                val coverDatum = new TunnelDatum(size);
+                val futureCoverDatumRelay =
+                    new TunnelRelayMessage.Encrypted()
+                        .tunnelId(tunnelId)
+                        .encrypt(onionAuthorizer, hopsSessionIds)
+                        .payload(coverDatum)
+                        .build();
 
-                futureEncryptedDatum.thenAccept(encryptedDatum -> {
-                    originatorContext.entry(tunnelId).writeAndFlush(encryptedDatum);
+                futureCoverDatumRelay.thenAccept(datumRelay -> {
+                    originatorContext.entry(tunnelId).writeAndFlush(datumRelay);
                     log.debug("Cover spam issued by peer {} via cover-tunnel {}", me.socketAddress(), tunnelId);
 
                     commonPool().execute(() -> {
