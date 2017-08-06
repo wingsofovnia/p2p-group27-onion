@@ -28,12 +28,12 @@ public interface OnionForwarder extends Closeable {
      * </ol>
      *
      * @param destination a {@link Peer} requested Tunnel should ends with
-     * @return a future {@link TunnelId} built
+     * @return a future {@link Tunnel} built
      * @throws OnionTunnelingException in case of unexpected error during Tunnel building
      * @see <a href="https://en.wikipedia.org/wiki/Onion_routing">
      * Wikipedia - Onion Routing</a>
      */
-    CompletableFuture<TunnelId> createTunnel(Peer destination) throws OnionTunnelingException;
+    CompletableFuture<Tunnel> createTunnel(Peer destination) throws OnionTunnelingException;
 
     /**
      * Instructs {@link OnionForwarder} that Tunnel is no longer in use and it can
@@ -44,6 +44,11 @@ public interface OnionForwarder extends Closeable {
      */
     void destroyTunnel(TunnelId tunnelId) throws OnionTunnelingException;
 
+    default void destroyTunnel(Tunnel tunnel) throws OnionTunnelingException {
+        destroyTunnel(tunnel.id());
+    }
+
+
     /**
      * Forwards data through the data Tunnel given
      *
@@ -52,6 +57,10 @@ public interface OnionForwarder extends Closeable {
      * @throws OnionDataForwardingException in case of unexpected error during data forwarding
      */
     void forward(TunnelId tunnelId, ByteBuffer data) throws OnionDataForwardingException;
+
+    default void forward(Tunnel tunnel, ByteBuffer data) throws OnionDataForwardingException {
+        forward(tunnel.id(), data);
+    }
 
     /**
      * Generates cover traffic which is sent to a random destination, used to

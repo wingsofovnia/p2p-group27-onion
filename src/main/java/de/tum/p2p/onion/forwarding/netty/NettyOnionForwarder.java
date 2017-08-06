@@ -27,6 +27,7 @@ import lombok.experimental.var;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -132,7 +133,7 @@ public class NettyOnionForwarder implements OnionForwarder {
     }
 
     @Override
-    public CompletableFuture<TunnelId> createTunnel(Peer destination) throws OnionTunnelingException {
+    public CompletableFuture<Tunnel> createTunnel(Peer destination) throws OnionTunnelingException {
         val tunnelId = TunnelId.random();
 
         // Random Route peers (not me/dest)
@@ -149,7 +150,7 @@ public class NettyOnionForwarder implements OnionForwarder {
                 add(dest);
             }});
 
-        val futureTunnelHopSessionIds = futureTunnelHopPeers.<List<SessionId>>thenCompose(tunnelPeers -> {
+        val futureTunnelHopSessionIds = futureTunnelHopPeers.<Pair<List<SessionId>, List<Peer>>>thenCompose(tunnelPeers -> {
             // tunnelEntryPeer peer is the fist random peer of a new future tunnel.
             val tunnelEntryPeer = tunnelPeers.iterator().next();
 
@@ -179,17 +180,20 @@ public class NettyOnionForwarder implements OnionForwarder {
 
                 return futurePrevSessionId.thenApply(lastSessionId -> {
                     sessionIds.add(lastSessionId);
-                    return sessionIds;
+                    return Pair.of(sessionIds, tunnelPeers);
                 });
             });
         });
 
-        return futureTunnelHopSessionIds.thenApply((sessionIds) -> {
+        return futureTunnelHopSessionIds.thenApply((sessionIdsTunnelPeers) -> {
+            val sessionIds = sessionIdsTunnelPeers.getKey();
+            val tunnelPeers = sessionIdsTunnelPeers.getValue();
+
             log.debug("Tunnel #{} has been persisted withing the onion {}", tunnelId, me.socketAddress());
 
             originatorContext.appendSession(tunnelId, sessionIds);
 
-            return tunnelId;
+            return Tunnel.of(tunnelId, tunnelPeers.get(tunnelPeers.size() - 1).publicKey(), sessionIds.size());
         });
     }
 
@@ -293,25 +297,25 @@ public class NettyOnionForwarder implements OnionForwarder {
                 "there are active tunnels is prohibited");
 
         rps.sampleNot(me).thenCompose(this::createTunnel)
-            .thenAccept(tunnelId -> {
-                val hopsSessionIds = originatorContext.sessionIds(tunnelId);
+            .thenAccept(tunnel -> {
+                val hopsSessionIds = originatorContext.sessionIds(tunnel.id());
 
                 val coverDatum = new TunnelDatum(size);
                 val futureCoverDatumRelay =
                     new TunnelRelayMessage.Encrypted()
-                        .tunnelId(tunnelId)
+                        .tunnelId(tunnel.id())
                         .encrypt(onionAuthorizer, hopsSessionIds)
                         .payload(coverDatum)
                         .build();
 
                 futureCoverDatumRelay.thenAccept(datumRelay -> {
-                    originatorContext.entry(tunnelId).writeAndFlush(datumRelay);
-                    log.debug("Cover spam issued by peer {} via cover-tunnel {}", me.socketAddress(), tunnelId);
+                    originatorContext.entry(tunnel.id()).writeAndFlush(datumRelay);
+                    log.debug("Cover spam issued by peer {} via cover-tunnel {}", me.socketAddress(), tunnel.id());
 
                     commonPool().execute(() -> {
                         try {
                             Thread.sleep(RETIRE_COVER_TUNNEL_TIMEOUT.toMillis());
-                            destroyTunnel(tunnelId);
+                            destroyTunnel(tunnel.id());
                         } catch (InterruptedException e) {
                             throw new OnionException("Failed to wait until cover tunnel timeout expire to close it", e);
                         }

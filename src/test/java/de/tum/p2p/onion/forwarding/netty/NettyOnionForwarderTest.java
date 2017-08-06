@@ -79,9 +79,11 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        val p1p3TunnelId = peer1onion.createTunnel(peer3).join();
+        val p1p3Tunnel = peer1onion.createTunnel(peer3).join();
 
-        assertNotNull(p1p3TunnelId);
+        assertNotNull(p1p3Tunnel);
+        assertEquals(peer3.publicKey(), p1p3Tunnel.destinationKey());
+        assertEquals(2, p1p3Tunnel.hops());
 
         // Verify session establishment
         verify(peer1auth, atLeastOnce()).sessionFactory();
@@ -96,8 +98,8 @@ public class NettyOnionForwarderTest {
         verify(peer3auth.sessionFactory(), times(1)).responseTo(any(byte[].class));
 
         // Verify routes
-        assertEquals(peer2.socketAddress(), peer1OriginContext.entry(p1p3TunnelId).remoteAddress());
-        assertEquals(peer3.socketAddress(), peer2router.nextHop(p1p3TunnelId).remoteAddress());
+        assertEquals(peer2.socketAddress(), peer1OriginContext.entry(p1p3Tunnel.id()).remoteAddress());
+        assertEquals(peer3.socketAddress(), peer2router.nextHop(p1p3Tunnel.id()).remoteAddress());
     }
 
     @Test
@@ -130,15 +132,15 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        val p1p3TunnelId = peer1onion.createTunnel(peer3).join();
-        val p1p2TunnelId = peer1onion.createTunnel(peer2).join();
-        val p3p2TunnelId = peer3onion.createTunnel(peer2).join();
-        val p3p1TunnelId = peer3onion.createTunnel(peer1).join();
+        val p1p3Tunnel = peer1onion.createTunnel(peer3).join();
+        val p1p2Tunnel = peer1onion.createTunnel(peer2).join();
+        val p3p2Tunnel = peer3onion.createTunnel(peer2).join();
+        val p3p1Tunnel = peer3onion.createTunnel(peer1).join();
 
-        assertNotNull(p1p3TunnelId);
-        assertNotNull(p1p2TunnelId);
-        assertNotNull(p3p2TunnelId);
-        assertNotNull(p3p1TunnelId);
+        assertNotNull(p1p3Tunnel);
+        assertNotNull(p1p2Tunnel);
+        assertNotNull(p3p2Tunnel);
+        assertNotNull(p3p1Tunnel);
     }
 
     @Test
@@ -186,18 +188,18 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        val p1p3TunnelId = peer1onion.createTunnel(peer3).join();
-        peer1onion.destroyTunnel(p1p3TunnelId);
+        val p1p3Tunnel = peer1onion.createTunnel(peer3).join();
+        peer1onion.destroyTunnel(p1p3Tunnel);
         Thread.sleep(Duration.ofSeconds(1).toMillis());
 
         // Verify hops being removed from all tunnels
-        assertFalse(peer1originContext.serves(p1p3TunnelId));
+        assertFalse(peer1originContext.serves(p1p3Tunnel.id()));
 
-        assertFalse(peer2router.hasNextHop(p1p3TunnelId));
-        assertFalse(peer2router.hasPrevHop(p1p3TunnelId));
+        assertFalse(peer2router.hasNextHop(p1p3Tunnel.id()));
+        assertFalse(peer2router.hasPrevHop(p1p3Tunnel.id()));
 
-        assertFalse(peer3router.hasNextHop(p1p3TunnelId));
-        assertFalse(peer3router.hasPrevHop(p1p3TunnelId));
+        assertFalse(peer3router.hasNextHop(p1p3Tunnel.id()));
+        assertFalse(peer3router.hasPrevHop(p1p3Tunnel.id()));
     }
 
     @Test
@@ -239,20 +241,20 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        val p1p3TunnelId = peer1onion.createTunnel(peer3).join();
+        val p1p3Tunnel = peer1onion.createTunnel(peer3).join();
 
-        assertNotNull(p1p3TunnelId);
+        assertNotNull(p1p3Tunnel);
 
         val lock = new CountDownLatch(1);
         peer3onion.subscribe((tunnelId, byteBuffer) -> {
 
-            assertEquals(p1p3TunnelId, tunnelId);
+            assertEquals(p1p3Tunnel.id(), tunnelId);
             assertArrayEquals(dataToForward, byteBuffer.array());
 
             lock.countDown();
         });
 
-        peer1onion.forward(p1p3TunnelId, ByteBuffer.wrap(dataToForward));
+        peer1onion.forward(p1p3Tunnel, ByteBuffer.wrap(dataToForward));
         if (!lock.await(Duration.ofSeconds(2).toMillis(), TimeUnit.MILLISECONDS))
             fail("Message didn't arrive on time");
     }
@@ -287,11 +289,11 @@ public class NettyOnionForwarderTest {
             .intermediateHops(1)
             .listen();
 
-        val p1p3TunnelId = peer1onion.createTunnel(peer3).join();
-        val p3p1TunnelId = peer3onion.createTunnel(peer1).join();
+        val p1p3Tunnel = peer1onion.createTunnel(peer3).join();
+        val p3p1Tunnel = peer3onion.createTunnel(peer1).join();
 
-        assertNotNull(p1p3TunnelId);
-        assertNotNull(p3p1TunnelId);
+        assertNotNull(p1p3Tunnel);
+        assertNotNull(p3p1Tunnel);
 
         val p1p3data = new byte[] {1, 2, 3};
         val p3p1data = new byte[] {3, 2, 1};
@@ -299,7 +301,7 @@ public class NettyOnionForwarderTest {
         val p1p3TunnelDatumLock = new CountDownLatch(1);
         peer3onion.subscribe((tunnelId, byteBuffer) -> {
 
-            assertEquals(p1p3TunnelId, tunnelId);
+            assertEquals(p1p3Tunnel.id(), tunnelId);
             assertArrayEquals(p1p3data, byteBuffer.array());
 
             p1p3TunnelDatumLock.countDown();
@@ -308,14 +310,14 @@ public class NettyOnionForwarderTest {
         val p3p1TunnelDatumLock = new CountDownLatch(1);
         peer1onion.subscribe((tunnelId, byteBuffer) -> {
 
-            assertEquals(p3p1TunnelId, tunnelId);
+            assertEquals(p3p1Tunnel.id(), tunnelId);
             assertArrayEquals(p3p1data, byteBuffer.array());
 
             p3p1TunnelDatumLock.countDown();
         });
 
-        peer1onion.forward(p1p3TunnelId, ByteBuffer.wrap(p1p3data));
-        peer3onion.forward(p3p1TunnelId, ByteBuffer.wrap(p3p1data));
+        peer1onion.forward(p1p3Tunnel, ByteBuffer.wrap(p1p3data));
+        peer3onion.forward(p3p1Tunnel, ByteBuffer.wrap(p3p1data));
 
         if (!p1p3TunnelDatumLock.await(Duration.ofSeconds(2).toMillis(), TimeUnit.MILLISECONDS))
             fail("Message didn't arrive to peer3onion on time");
