@@ -8,11 +8,9 @@ import de.tum.p2p.onion.forwarding.netty.event.TunnelExtendedReceived;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageDecoder;
+import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-
-import java.util.List;
 
 /**
  * {@code TunnelExtendedHandler} handles ONION_TUNNEL_EXTEND<strong>ED</strong> messages
@@ -22,7 +20,7 @@ import java.util.List;
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
 @Slf4j
-public class TunnelExtendedHandler extends MessageToMessageDecoder<TunnelExtendedMessage> {
+public class TunnelExtendedHandler extends SimpleChannelInboundHandler<TunnelExtendedMessage> {
 
     private final OnionAuthorizer onionAuth;
     private final RoutingContext routingContext;
@@ -35,7 +33,7 @@ public class TunnelExtendedHandler extends MessageToMessageDecoder<TunnelExtende
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, TunnelExtendedMessage tunnelExtendedMsg, List<Object> out) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, TunnelExtendedMessage tunnelExtendedMsg) throws Exception {
         val tunnelId = tunnelExtendedMsg.tunnelId();
         val requestId = tunnelExtendedMsg.requestId();
 

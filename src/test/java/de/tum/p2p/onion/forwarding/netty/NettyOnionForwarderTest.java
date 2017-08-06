@@ -254,7 +254,7 @@ public class NettyOnionForwarderTest {
 
         peer1onion.forward(p1p3TunnelId, ByteBuffer.wrap(dataToForward));
         if (!lock.await(Duration.ofSeconds(2).toMillis(), TimeUnit.MILLISECONDS))
-            fail("Message didn't arrive");
+            fail("Message didn't arrive on time");
     }
 
     @Test
@@ -318,10 +318,10 @@ public class NettyOnionForwarderTest {
         peer3onion.forward(p3p1TunnelId, ByteBuffer.wrap(p3p1data));
 
         if (!p1p3TunnelDatumLock.await(Duration.ofSeconds(2).toMillis(), TimeUnit.MILLISECONDS))
-            fail("Message didn't arrive to peer3onion");
+            fail("Message didn't arrive to peer3onion on time");
 
         if (!p3p1TunnelDatumLock.await(Duration.ofSeconds(2).toMillis(), TimeUnit.MILLISECONDS))
-            fail("Message didn't arrive to peer1onion");
+            fail("Message didn't arrive to peer1onion on time");
     }
 
     @Test
@@ -373,7 +373,7 @@ public class NettyOnionForwarderTest {
         peer1onion.cover(Byte.SIZE);
 
         if (lock.await(Duration.ofSeconds(2).toMillis(), TimeUnit.MILLISECONDS))
-            fail("Cover didn't arrive");
+            fail("Cover didn't arrive on time");
     }
 
     private static OnionAuthorizer spiedInMemoryBase64OnionAuthorizer() {
