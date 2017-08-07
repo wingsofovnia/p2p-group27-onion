@@ -1,7 +1,12 @@
+plugins {
+    id 'com.github.ksoichiro.console.reporter' version '0.5.0'
+}
+
 group 'de.tum.p2p'
 version '0.1-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'jacoco'
 sourceCompatibility = 1.8
 
 repositories {
@@ -61,6 +66,19 @@ task javadocs(type: Javadoc) {
     classpath += configurations.compile
     source = sourceSets.main.allJava
 }
+
+consoleReporter {
+    jacoco {
+        enabled true
+
+        thresholdError 55
+        failIfLessThanThresholdError true
+    }
+}
+
+task coverage(dependsOn: ['test', 'jacocoTestReport'])
+
+check.finalizedBy coverage
 
 clean {
     delete fileTree('.') { include '**/*.log' }
