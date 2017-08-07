@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import static de.tum.p2p.util.ByteBuffers.bufferAllBytes;
 import static de.tum.p2p.util.Nets.localhost;
@@ -325,13 +326,23 @@ public class NettyOnionForwarder implements OnionForwarder {
     }
 
     @Override
-    public void subscribe(BiConsumer<TunnelId, ByteBuffer> consumer) {
+    public void addIncomingDataObserver(BiConsumer<TunnelId, ByteBuffer> consumer) {
         eventBus.registerDataListener(consumer);
     }
 
     @Override
-    public void unsubscribe(BiConsumer<TunnelId, ByteBuffer> consumer) {
-        eventBus.unregisterDataListener(consumer);
+    public void removeIncomingDataObserver(BiConsumer<TunnelId, ByteBuffer> consumer) {
+        eventBus.unregisterIncomingTunnelListener(consumer);
+    }
+
+    @Override
+    public void addIncomingTunnelObserver(Consumer<TunnelId> tunnelIdConsumer) {
+        eventBus.registerIncomingTunnelListener(tunnelIdConsumer);
+    }
+
+    @Override
+    public void removeIncomingTunnelObserver(BiConsumer<TunnelId, ByteBuffer> tunnelIdConsumer) {
+        eventBus.unregisterIncomingTunnelListener(tunnelIdConsumer);
     }
 
     @Override

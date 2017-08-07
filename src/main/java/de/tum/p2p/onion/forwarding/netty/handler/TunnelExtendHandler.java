@@ -1,8 +1,10 @@
 package de.tum.p2p.onion.forwarding.netty.handler;
 
+import com.google.common.eventbus.EventBus;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
 import de.tum.p2p.onion.forwarding.OnionTunnelingException;
 import de.tum.p2p.onion.forwarding.netty.context.RoutingContext;
+import de.tum.p2p.onion.forwarding.netty.event.TunnelExtendReceived;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import io.netty.channel.ChannelFutureListener;
@@ -23,10 +25,12 @@ public class TunnelExtendHandler extends SimpleChannelInboundHandler<TunnelExten
 
     private final RoutingContext routingContext;
     private final OnionAuthorizer onionAuth;
+    private final EventBus eventBus;
 
-    public TunnelExtendHandler(RoutingContext routingContext, OnionAuthorizer onionAuth) {
+    public TunnelExtendHandler(RoutingContext routingContext, OnionAuthorizer onionAuth, EventBus eventBus) {
         this.routingContext = routingContext;
         this.onionAuth = onionAuth;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -43,6 +47,8 @@ public class TunnelExtendHandler extends SimpleChannelInboundHandler<TunnelExten
 
             routingContext.setPrevHop(tunnelId, ctx.channel());
             routingContext.setSessionId(tunnelId, sessionId);
+
+            eventBus.post(TunnelExtendReceived.from(tunnelId));
 
             val tunnelExtendedMsg = new TunnelExtendedMessage(tunnelId, requestId, hs2);
             ctx.writeAndFlush(tunnelExtendedMsg)

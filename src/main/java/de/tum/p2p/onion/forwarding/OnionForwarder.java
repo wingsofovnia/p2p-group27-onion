@@ -6,6 +6,7 @@ import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * The Onion Forwarder is responsible for forwarding data between
@@ -79,14 +80,28 @@ public interface OnionForwarder extends Closeable {
      *
      * @param consumer arrived data consumer (lambda)
      */
-    void subscribe(final BiConsumer<TunnelId, ByteBuffer> consumer);
+    void addIncomingDataObserver(BiConsumer<TunnelId, ByteBuffer> consumer);
 
     /**
      * Unregister a listener from consuming incoming data messages
      *
      * @param consumer arrived data consumer (lambda)
      */
-    void unsubscribe(final BiConsumer<TunnelId, ByteBuffer> consumer);
+    void removeIncomingDataObserver(BiConsumer<TunnelId, ByteBuffer> consumer);
+
+    /**
+     * Registers a listener for incoming tunnel
+     *
+     * @param tunnelIdConsumer arrived tunnel id consumer (lambda)
+     */
+    void addIncomingTunnelObserver(Consumer<TunnelId> tunnelIdConsumer);
+
+    /**
+     * Unregister a listener from consuming incoming tunnel
+     *
+     * @param consumer arrived tunnel id consumer (lambda)
+     */
+    void removeIncomingTunnelObserver(BiConsumer<TunnelId, ByteBuffer> consumer);
 
     /**
      * Generates a {@link Peer} info object with peer connection detains and public key

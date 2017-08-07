@@ -3,6 +3,7 @@ package de.tum.p2p.onion.forwarding.netty;
 import de.tum.p2p.Peer;
 import de.tum.p2p.onion.auth.InMemoryBase64OnionAuthorizer;
 import de.tum.p2p.onion.auth.OnionAuthorizer;
+import de.tum.p2p.onion.forwarding.TunnelId;
 import de.tum.p2p.onion.forwarding.netty.context.OriginatorContext;
 import de.tum.p2p.onion.forwarding.netty.context.RoutingContext;
 import de.tum.p2p.rps.InMemoryRandomPeerSampler;
@@ -18,6 +19,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 
 import static de.tum.p2p.Peers.randLocalPeers;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -100,6 +102,54 @@ public class NettyOnionForwarderTest {
         // Verify routes
         assertEquals(peer2.socketAddress(), peer1OriginContext.entry(p1p3Tunnel.id()).remoteAddress());
         assertEquals(peer3.socketAddress(), peer2router.nextHop(p1p3Tunnel.id()).remoteAddress());
+    }
+
+    @Test
+    public void notifiesAboutIncommingTunnel() throws InterruptedException {
+        val peer1 = randomPeers.get(0);
+        val peer2 = randomPeers.get(1);
+        val peer3 = randomPeers.get(2);
+
+        val peer1onion = new NettyOnionForwarder.Builder()
+            .port(peer1.port())
+            .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
+            .randomPeerSampler(rps)
+            .publicKey(peer1.publicKey())
+            .intermediateHops(1)
+            .listen();
+
+        new NettyOnionForwarder.Builder()
+            .port(peer2.port())
+            .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
+            .randomPeerSampler(rps)
+            .publicKey(peer2.publicKey())
+            .intermediateHops(1)
+            .listen();
+
+        val peer3onion = new NettyOnionForwarder.Builder()
+            .port(peer3.port())
+            .onionAuthorizer(spiedInMemoryBase64OnionAuthorizer())
+            .randomPeerSampler(rps)
+            .publicKey(peer3.publicKey())
+            .intermediateHops(1)
+            .listen();
+
+        val lock = new CountDownLatch(1);
+        val tunnelIdArrived = new TunnelId[1];
+        peer3onion.addIncomingTunnelObserver(new Consumer<TunnelId>() {
+            @Override
+            public void accept(TunnelId tunnelId) {
+                tunnelIdArrived[0] = tunnelId;
+                lock.countDown();
+            }
+        });
+
+        val p1p3Tunnel = peer1onion.createTunnel(peer3).join();
+
+        if (!lock.await(Duration.ofSeconds(2).toMillis(), TimeUnit.MILLISECONDS))
+            fail("Onion FWD didn't notify about an incoming tunnel");
+
+        assertEquals(p1p3Tunnel.id(), tunnelIdArrived[0]);
     }
 
     @Test
@@ -246,7 +296,7 @@ public class NettyOnionForwarderTest {
         assertNotNull(p1p3Tunnel);
 
         val lock = new CountDownLatch(1);
-        peer3onion.subscribe((tunnelId, byteBuffer) -> {
+        peer3onion.addIncomingDataObserver((tunnelId, byteBuffer) -> {
 
             assertEquals(p1p3Tunnel.id(), tunnelId);
             assertArrayEquals(dataToForward, byteBuffer.array());
@@ -299,7 +349,7 @@ public class NettyOnionForwarderTest {
         val p3p1data = new byte[] {3, 2, 1};
 
         val p1p3TunnelDatumLock = new CountDownLatch(1);
-        peer3onion.subscribe((tunnelId, byteBuffer) -> {
+        peer3onion.addIncomingDataObserver((tunnelId, byteBuffer) -> {
 
             assertEquals(p1p3Tunnel.id(), tunnelId);
             assertArrayEquals(p1p3data, byteBuffer.array());
@@ -308,7 +358,7 @@ public class NettyOnionForwarderTest {
         });
 
         val p3p1TunnelDatumLock = new CountDownLatch(1);
-        peer1onion.subscribe((tunnelId, byteBuffer) -> {
+        peer1onion.addIncomingDataObserver((tunnelId, byteBuffer) -> {
 
             assertEquals(p3p1Tunnel.id(), tunnelId);
             assertArrayEquals(p3p1data, byteBuffer.array());
@@ -368,7 +418,7 @@ public class NettyOnionForwarderTest {
         doReturn(completedFuture(peer3)).when(peer1rps).sampleNot(any(Peer.class));
 
         val lock = new CountDownLatch(1);
-        peer3onion.subscribe((tunnelId, byteBuffer) -> {
+        peer3onion.addIncomingDataObserver((tunnelId, byteBuffer) -> {
             lock.countDown();
         });
 

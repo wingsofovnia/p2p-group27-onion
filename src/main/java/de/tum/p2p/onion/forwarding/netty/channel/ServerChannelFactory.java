@@ -90,7 +90,7 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
             pipe.addLast(new TunnelRetireHandler(routingContext));
             pipe.addLast(new TunnelRelayHandler(onionAuthorizer, routingContext));
             pipe.addLast(new TunnelConnectHandler(routingContext, clientChannelFactory));
-            pipe.addLast(new TunnelExtendHandler(routingContext, onionAuthorizer));
+            pipe.addLast(new TunnelExtendHandler(routingContext, onionAuthorizer, eventBus));
             pipe.addLast(new TunnelDatumHandler(eventBus));
 
         });
