@@ -34,22 +34,14 @@ public final class Keys {
         throw new AssertionError("No instance for you");
     }
 
-    public static <T extends Key> T notOversizedKey(T publicKey, Class<T> keyType) {
-        val keyLength = publicKey.getEncoded().length;
+    public static <T extends Key> T notOversizedKey(T key) {
+        val keyLength = key.getEncoded().length;
 
         if (keyLength > PUBLIC_KEY_MAX_BYTES)
             throw new IllegalArgumentException(format("Too long public key. Max supported = %d, actual = %d.",
                 PUBLIC_KEY_MAX_BYTES, keyLength));
 
-        return publicKey;
-    }
-
-    public static PublicKey notOversizedKey(PublicKey publicKey) {
-        return notOversizedKey(publicKey, PublicKey.class);
-    }
-
-    public static PrivateKey notOversizedKey(PrivateKey privateKey) {
-        return notOversizedKey(privateKey, PrivateKey.class);
+        return key;
     }
 
     public static KeyFactory keyFactory() {
@@ -66,5 +58,13 @@ public final class Keys {
 
     public static PublicKey parsePublicKey(byte[] publicKeyBytes) throws InvalidKeySpecException {
         return parsePublicKey(toObject(publicKeyBytes));
+    }
+
+    public static PrivateKey parsePrivateKey(Byte[] publicKeyBytes) throws InvalidKeySpecException {
+        return keyFactory().generatePrivate(toKeySpec.apply(publicKeyBytes));
+    }
+
+    public static PrivateKey parsePrivateKey(byte[] publicKeyBytes) throws InvalidKeySpecException {
+        return parsePrivateKey(toObject(publicKeyBytes));
     }
 }

@@ -3,6 +3,7 @@ package de.tum.p2p.util;
 import lombok.val;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * {@code ByteBuffers} contains util methods for extracting
@@ -17,22 +18,6 @@ public final class ByteBuffers {
     }
 
     /**
-     * Returns all bytes of given ByteBuffer from byteBuffer.position()
-     * to byteBuffer.limit().
-     *
-     * @param byteBuffer source of bytes
-     * @return a byte array of byteBuffer.remaining() size
-     */
-    public static byte[] bufferRemainingBytes(ByteBuffer byteBuffer) {
-        val byteBufferDupe = byteBuffer.duplicate();
-
-        val bytes = new byte[byteBufferDupe.remaining()];
-        byteBufferDupe.get(bytes);
-
-        return bytes;
-    }
-
-    /**
      * Returns all bytes of given ByteBuffer from 0 to byteBuffer.limit()
      *
      * @param byteBuffer source of bytes
@@ -40,9 +25,12 @@ public final class ByteBuffers {
      */
     public static byte[] bufferAllBytes(ByteBuffer byteBuffer) {
         val byteBufferDupe = byteBuffer.duplicate();
-        byteBufferDupe.position(0);
 
-        return bufferRemainingBytes(byteBufferDupe);
+        val bytes = new byte[byteBufferDupe.capacity()];
+        byteBufferDupe.position(0);
+        byteBufferDupe.get(bytes);
+
+        return bytes;
     }
 
     /**
@@ -78,5 +66,26 @@ public final class ByteBuffers {
      */
     public static byte[] bufferWrittenBytes(ByteBuffer byteBuffer) {
         return bufferConsumedBytes(byteBuffer);
+    }
+
+    /**
+     * Pads remaining space of given bytenBuffer with
+     * <strong>random</strong> values
+     *
+     * @param byteBuffer to pad
+     * @return padded buffer
+     */
+    public static ByteBuffer randPadRemaining(ByteBuffer byteBuffer) {
+        val byteBufferDupe = byteBuffer.duplicate();
+
+        if (byteBufferDupe.remaining() == 0)
+            return byteBufferDupe;
+
+        val randPadTrail = new byte[byteBuffer.remaining()];
+        ThreadLocalRandom.current().nextBytes(randPadTrail);
+
+        byteBufferDupe.put(randPadTrail);
+
+        return byteBufferDupe;
     }
 }

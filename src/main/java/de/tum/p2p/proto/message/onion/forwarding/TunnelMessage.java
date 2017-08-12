@@ -9,7 +9,8 @@ import lombok.val;
 
 import java.nio.ByteBuffer;
 
-import static de.tum.p2p.util.Paddings.randPadRemaining;
+import static de.tum.p2p.util.ByteBuffers.bufferWrittenBytes;
+import static de.tum.p2p.util.ByteBuffers.randPadRemaining;
 import static org.apache.commons.lang3.Validate.notNull;
 
 /**
@@ -70,7 +71,9 @@ public abstract class TunnelMessage implements Message {
         if (msgBytesBuffer.remaining() == 0)
             return msgBytesBuffer.array();
 
-        return randPadRemaining(msgBytesBuffer).array();
+        val paddedMsgBytesBuffer = randPadRemaining(msgBytesBuffer);
+
+        return bufferWrittenBytes(paddedMsgBytesBuffer);
     }
 
     @Override
