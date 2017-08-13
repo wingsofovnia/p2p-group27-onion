@@ -83,10 +83,9 @@ public class OriginatorContext implements Closeable {
 
     @Override
     public void close() throws IOException {
-        tunnels.forEach((tunnelId, tunnel) -> {
-            closeTunnel(tunnel);
-        });
-        tunnels.clear();
+        for (val tunnelId : tunnels.keySet()) {
+            forget(tunnelId);
+        }
     }
 
     public void forget(TunnelId tunnelId) {
@@ -95,8 +94,8 @@ public class OriginatorContext implements Closeable {
     }
 
     private void closeTunnel(Tunnel tunnel) {
-        tunnel.entry.disconnect();
-        tunnel.entry.close().awaitUninterruptibly();
+        tunnel.entry.disconnect().syncUninterruptibly();
+        tunnel.entry.close().syncUninterruptibly();
     }
 
     @EqualsAndHashCode

@@ -12,6 +12,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import lombok.val;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -94,6 +95,12 @@ public class ServerChannelFactory extends ChannelFactory<ServerChannel> {
             pipe.addLast(new TunnelDatumHandler(eventBus));
 
         });
+    }
+
+    @Override
+    public void close() throws IOException {
+        bossEventLoop.shutdownGracefully();
+        workerEventLoop.shutdownGracefully();
     }
 
     public static final class Builder {

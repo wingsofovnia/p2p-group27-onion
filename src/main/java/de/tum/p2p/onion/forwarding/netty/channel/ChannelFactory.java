@@ -16,6 +16,7 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import lombok.val;
 
+import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -28,7 +29,7 @@ import java.util.function.Consumer;
  *
  * @author Illia Ovchynnikov &lt;illia.ovchynnikov@gmail.com&gt;
  */
-abstract class ChannelFactory<T extends Channel> {
+abstract class ChannelFactory<T extends Channel> implements Closeable {
 
     static {
         // Enable Netty to use Sl4j

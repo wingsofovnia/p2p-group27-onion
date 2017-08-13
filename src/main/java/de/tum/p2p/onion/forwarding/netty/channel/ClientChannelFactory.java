@@ -17,6 +17,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import lombok.val;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -77,6 +78,11 @@ public class ClientChannelFactory extends ChannelFactory<Channel> {
         return messagingChannel(pipe -> {
             pipe.addLast(new TunnelExtendedHandler(onionAuthorizer, routingContext, eventBus));
         });
+    }
+
+    @Override
+    public void close() throws IOException {
+        bossEventLoop.shutdownGracefully();
     }
 
     public static final class Builder {

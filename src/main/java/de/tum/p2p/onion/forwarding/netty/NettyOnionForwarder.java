@@ -96,6 +96,7 @@ public class NettyOnionForwarder implements OnionForwarder {
     private final RoutingContext routingContext;
 
     private final Channel serverChannel;
+    private final ServerChannelFactory serverChannelFactory;
     private final ClientChannelFactory clientChannelFactory;
 
     private final OnionEventBus eventBus;
@@ -116,14 +117,16 @@ public class NettyOnionForwarder implements OnionForwarder {
         this.originatorContext = builder.originatorContext;
         this.routingContext = builder.routingContext;
 
+        this.serverChannelFactory = builder.buildServerChannelFactory();
+        this.clientChannelFactory = builder.buildClientChannelFactory();
+
         try {
-            this.serverChannel = builder.buildServerChannelFactory()
+            this.serverChannel = serverChannelFactory
                 .bind(builder.inetAddress, builder.port)
                 .get(SYNC_CHANNEL_GET_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 
             log.info("Onion Server Channel has been initialized on {}", serverChannel.localAddress());
 
-            this.clientChannelFactory = builder.buildClientChannelFactory();
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new OnionInitializationException("Failed to initialize onion server channel");
         }
@@ -353,12 +356,17 @@ public class NettyOnionForwarder implements OnionForwarder {
     @Override
     public void close() throws IOException {
         try {
+            this.originatorContext.tunnels().forEach(this::destroyTunnel);
+
+            this.originatorContext.close();
             this.routingContext.close();
 
-            this.serverChannel.disconnect();
             this.serverChannel.close().syncUninterruptibly();
         } catch (Exception e) {
             throw new IOException("Failed to close onion server channel", e);
+        } finally {
+            this.serverChannelFactory.close();
+            this.clientChannelFactory.close();
         }
     }
 

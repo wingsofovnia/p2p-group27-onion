@@ -100,11 +100,6 @@ public final class RoutingContext implements Closeable {
         serve(tunnelId, null, null, sessionId);
     }
 
-    public void clear() {
-        routes.forEach((tunnelId, route) -> closeRoute(route));
-        routes.clear();
-    }
-
     private void closeRoute(Route route) {
         closeChannel(route.next);
         closeChannel(route.prev);
@@ -114,13 +109,15 @@ public final class RoutingContext implements Closeable {
         if (channel == null)
             return;
 
-        channel.disconnect();
-        channel.close().awaitUninterruptibly();
+        channel.disconnect().syncUninterruptibly();
+        channel.close().syncUninterruptibly();
     }
 
     @Override
     public void close() throws IOException {
-        clear();
+        for (val tunnelId : routes.keySet()) {
+            forget(tunnelId);
+        }
     }
 
     @EqualsAndHashCode
