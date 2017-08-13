@@ -1,2 +1,4 @@
 rootProject.name = 'onion-forwarding'
+include 'samples'
+findProject(':samples')?.name = 'onion-forwarding-samples'
 

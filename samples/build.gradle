@@ -1,0 +1,23 @@
+group 'de.tum.p2p'
+version '0.1-SNAPSHOT'
+
+apply plugin: 'java'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile rootProject
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "de.tum.p2p.samples.inmemory.LocalInMemoryConsoleOnionForwarder"
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
