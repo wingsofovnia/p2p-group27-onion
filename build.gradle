@@ -72,7 +72,7 @@ consoleReporter {
         enabled true
 
         thresholdError 55
-        failIfLessThanThresholdError true
+        failIfLessThanThresholdError false
     }
 }
 

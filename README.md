@@ -14,7 +14,7 @@ Tunnel building is done iteratively. A peer O building a tunnel selects the firs
 - [x] 4. INI config loader (ini4j)
 - [x] 5. Onion Forwarding In-Memory Sample
 - [x] 6. Remote RPS Client (Netty)
-- [ ] 7. Onion Forwarding API
+- [x] 7. Onion Forwarding API (Netty, partially - no incoming data notification)
 - [ ] 8. Remote Onion Authorizer Client
 - [ ] 9. CLI Module Launcher (blocked by 7 & 8)
 - [x] 10. Code Coverage Reports
@@ -72,7 +72,6 @@ Total time: 14.324 secs
 Coverage summary:
 onion-forwarding:  61,2%
 ```
-Everything that is lower than 55% will result in a build error.
 
 ## Running Onion Forward In-Memory Example
 There is an example of Netty-based Onion Forward implementation which you can run locally to test data forwarding without required remote Onion Authorizer and RPS. All onion are run locally with in-memory Onion Authorizer and RPS fakes.
