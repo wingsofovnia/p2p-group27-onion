@@ -7,7 +7,7 @@ import de.tum.p2p.onion.forwarding.TunnelId;
 import de.tum.p2p.onion.forwarding.netty.event.TunnelDatumReceived;
 import de.tum.p2p.onion.forwarding.netty.event.TunnelExtendReceived;
 import de.tum.p2p.onion.forwarding.netty.event.TunnelExtendedReceived;
-import de.tum.p2p.proto.message.onion.forwarding.RequestId;
+import de.tum.p2p.proto.RequestId;
 
 import java.nio.ByteBuffer;
 import java.util.List;

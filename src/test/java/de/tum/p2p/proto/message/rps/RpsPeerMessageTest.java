@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public class RpsPeerMessageTest {
 
-    private static final int TEST_RUNS = 20;
+    private static final int TEST_RUNS = 10;
 
     @Parameterized.Parameters
     public static Collection<RpsPeerMessage> data() throws Exception {

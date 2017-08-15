@@ -3,7 +3,7 @@ package de.tum.p2p.onion.forwarding.netty.event;
 import de.tum.p2p.onion.auth.SessionId;
 import de.tum.p2p.onion.forwarding.TunnelId;
 import de.tum.p2p.onion.forwarding.netty.handler.TunnelExtendedHandler;
-import de.tum.p2p.proto.message.onion.forwarding.RequestId;
+import de.tum.p2p.proto.RequestId;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendedMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -42,4 +42,8 @@ public final class IPs {
             throw new RuntimeException(e);
         }
     }
+
+    public static InetAddress randIP() {
+        return ThreadLocalRandom.current().nextBoolean() ? randIPv4() : randIPv6();
+    }
 }

@@ -2,6 +2,7 @@ package de.tum.p2p.proto.message.onion.forwarding;
 
 import de.tum.p2p.onion.forwarding.TunnelId;
 import de.tum.p2p.proto.ProtoException;
+import de.tum.p2p.proto.RequestId;
 import de.tum.p2p.proto.message.MessageType;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

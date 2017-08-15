@@ -44,6 +44,17 @@ import static org.apache.commons.lang3.Validate.notNull;
 @EqualsAndHashCode(callSuper = true)
 public class TunnelRelayMessage extends TunnelMessage {
 
+    /**
+     * A size of metadata this message carries
+     */
+    public static final int META_BYTES = TunnelMessage.META_BYTES
+        + Short.SIZE;   // payload size
+
+    /**
+     * Amount of bytes that are free to use by child classes (max - meta)
+     */
+    public static final int PAYLOAD_BYTES = BYTES - META_BYTES;
+
     @Getter
     private final byte[] payload;
 
@@ -51,7 +62,7 @@ public class TunnelRelayMessage extends TunnelMessage {
         this(tunnelId, payload.bytes());
     }
 
-    private TunnelRelayMessage(TunnelId tunnelId, byte[] payload) {
+    TunnelRelayMessage(TunnelId tunnelId, byte[] payload) {
         super(tunnelId);
         this.payload = notNull(payload);
     }
@@ -78,7 +89,7 @@ public class TunnelRelayMessage extends TunnelMessage {
             throw new ProtoException("Failed to bytefy Relay Message - Payload is too big. " +
                 "Expected max = " + PAYLOAD_BYTES + ", actual = " + payload.length);
 
-        messageBuffer.putChar((char) payload.length);
+        messageBuffer.putShort((short) payload.length);
         messageBuffer.put(payload);
     }
 

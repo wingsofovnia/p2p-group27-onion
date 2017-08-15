@@ -1,4 +1,4 @@
-package de.tum.p2p.proto.message.onion.forwarding;
+package de.tum.p2p.proto;
 
 import lombok.EqualsAndHashCode;
 

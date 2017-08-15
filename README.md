@@ -63,7 +63,7 @@ $ ./gradlew clean javadocs
 Documentation will be available at `build/docs/javadoc/index.html` then.
 
 ## Code Coverage
-You can check project coverage percentage and generate Jacoco report by running Gradle `check jacocoTestReport` tasks. Coverage statistics will be displayed after running tests. Coverate report will be available at `build/reports/jacoco/test/html/index.html`.
+You can check project C0 & C1 coverage percentage and generate Jacoco report by running Gradle `check jacocoTestReport` tasks. Coverage statistics will be displayed after running tests. Coverate report will be available at `build/reports/jacoco/test/html/index.html`.
 ```
 $ ./gradlew clean check jacocoTestReport
 ....

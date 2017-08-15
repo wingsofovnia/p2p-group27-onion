@@ -55,7 +55,7 @@ public abstract class TunnelMessage implements Message {
         this.tunnelId = notNull(tunnelId);
     }
 
-    protected void writeMeta(ByteBuffer messageBuffer) {
+    protected void writeHeaders(ByteBuffer messageBuffer) {
         messageBuffer.putInt(tunnelId.raw());
     }
 
@@ -65,7 +65,7 @@ public abstract class TunnelMessage implements Message {
     public final byte[] bytes() {
         val msgBytesBuffer = ByteBuffer.allocate(BYTES);
 
-        writeMeta(msgBytesBuffer);
+        writeHeaders(msgBytesBuffer);
         writeBody(msgBytesBuffer);
 
         if (msgBytesBuffer.remaining() == 0)

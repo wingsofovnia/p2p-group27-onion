@@ -54,7 +54,7 @@ public abstract class TypedTunnelMessage extends TunnelMessage {
     }
 
     @Override
-    protected void writeMeta(ByteBuffer messageBuffer) {
+    protected void writeHeaders(ByteBuffer messageBuffer) {
         messageBuffer.putInt(tunnelId.raw());
         messageBuffer.putShort(messageType.code());
     }

@@ -10,7 +10,7 @@ import de.tum.p2p.onion.forwarding.netty.channel.ClientChannelFactory;
 import de.tum.p2p.onion.forwarding.netty.channel.ServerChannelFactory;
 import de.tum.p2p.onion.forwarding.netty.context.OriginatorContext;
 import de.tum.p2p.onion.forwarding.netty.context.RoutingContext;
-import de.tum.p2p.proto.message.onion.forwarding.RequestId;
+import de.tum.p2p.proto.RequestId;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelExtendMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelMessage;
 import de.tum.p2p.proto.message.onion.forwarding.TunnelRetireMessage;

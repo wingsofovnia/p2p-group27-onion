@@ -45,6 +45,18 @@ public class TunnelDatum extends TunnelRelayPayload {
 
     private static final int HASH_LENGTH = 16; // md5
 
+    /**
+     * A size of metadata this message carries
+     */
+    public static final int META_BYTES = TunnelRelayPayload.META_BYTES
+        + Short.SIZE    // payload size
+        + HASH_LENGTH;  // hash length
+
+    /**
+     * Amount of bytes that are free to use for data (max - meta)
+     */
+    public static final int PAYLOAD_BYTES = BYTES - META_BYTES;
+
     @Getter
     private final byte[] payload;
 
